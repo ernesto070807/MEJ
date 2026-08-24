@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma MEJ - Gestión de Servicios y Flota</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -25,8 +26,8 @@
             </div>
             <form onsubmit="iniciarSesion(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo</label>
-                    <input type="email" id="loginCorreo" required autocomplete="username" placeholder="correo@mej.com" class="w-full text-sm border rounded-lg px-3 py-2">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Usuario / ID</label>
+                    <input type="text" id="loginUsuario" required autocomplete="username" placeholder="Ej: ADMI1, OPERA1" class="w-full text-sm border rounded-lg px-3 py-2 uppercase">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
@@ -41,7 +42,7 @@
         </div>
     </div>
 
-    <!-- CONTENEDOR PRINCIPAL DE LA APP (oculto hasta iniciar sesión) -->
+    <!-- CONTENEDOR PRINCIPAL DE LA APP -->
     <div id="appShell" class="hidden">
 
     <!-- Header -->
@@ -220,7 +221,7 @@
         <i class="fa-solid fa-route"></i> Registrar Etapa / KM
     </button>
 
-    <!-- BOTÓN FLOTANTE "VOLVER AL LOBBY" (visible fuera del lobby) -->
+    <!-- BOTÓN FLOTANTE "VOLVER AL LOBBY" -->
     <button id="btnVolverLobby" onclick="switchTab('lobby')" class="hidden fixed bottom-6 right-6 z-40 bg-blue-900 hover:bg-blue-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl transition" title="Regresar al menú principal (Lobby)">
         <i class="fa-solid fa-house"></i>
     </button>
@@ -228,7 +229,7 @@
     <!-- TOAST DE NOTIFICACIÓN -->
     <div id="toast" class="hidden fixed bottom-6 left-6 z-50 toast"></div>
 
-    <!-- MODAL CLIENTE (CORRELATIVO AUTOMÁTICO) -->
+    <!-- MODAL CLIENTE -->
     <div id="modalCliente" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 id="modalClienteTitulo" class="text-lg font-bold mb-4">Registrar Nuevo Cliente</h3>
@@ -265,9 +266,9 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cliente</label>
-                    <select id="cotCliente" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white"><!-- Dinámico: muestra Razón Social --></select>
+                    <select id="cotCliente" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white"></select>
                 </div>
-                <input type="text" id="cotDesc" required placeholder="Descripción del servicio (Ej: Recolección y disposición)" class="w-full text-sm border rounded-lg px-3 py-2">
+                <input type="text" id="cotDesc" required placeholder="Descripción del servicio" class="w-full text-sm border rounded-lg px-3 py-2">
 
                 <div class="grid grid-cols-2 gap-2">
                     <input type="number" step="0.01" id="cotPeso" required placeholder="Peso aprox. (TN)" class="w-full text-sm border rounded-lg px-3 py-2">
@@ -280,7 +281,7 @@
                     </select>
                 </div>
 
-                <input type="text" id="cotUbicacion" required placeholder="Ubicación de la planta (dirección del generador)" class="w-full text-sm border rounded-lg px-3 py-2">
+                <input type="text" id="cotUbicacion" required placeholder="Ubicación de la planta" class="w-full text-sm border rounded-lg px-3 py-2">
 
                 <div class="grid grid-cols-2 gap-2">
                     <select id="cotTipoPago" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
@@ -294,7 +295,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Foto de la carga/zona (opcional)</label>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Foto de la carga (opcional)</label>
                     <input type="file" id="cotFotoFile" accept="image/*" onchange="previsualizarFoto(event)" class="w-full text-sm border rounded-lg px-3 py-2 bg-white file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-purple-50 file:text-purple-700 file:text-xs">
                     <div id="cotFotoPreviewWrap" class="hidden mt-2 flex items-center gap-2">
                         <img id="cotFotoPreview" class="w-16 h-16 object-cover rounded-lg border border-slate-200">
@@ -314,7 +315,6 @@
                             <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Vehículo asignado</label>
                             <select id="cotVehiculoAsignado" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
                                 <option value="">Sin asignar aún</option>
-                                <!-- Dinámico: se llena desde la hoja Vehiculos -->
                             </select>
                         </div>
                         <div>
@@ -328,8 +328,8 @@
                     </div>
                     <div class="mt-2">
                         <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Personal asignado (conductor + auxiliares)</label>
-                        <select id="cotPersonal" multiple class="w-full text-sm border rounded-lg px-3 py-2 bg-white h-28"><!-- Dinámico: se llena desde la hoja Usuarios --></select>
-                        <p class="text-[10px] text-slate-400 mt-1">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varias personas.</p>
+                        <select id="cotPersonal" multiple class="w-full text-sm border rounded-lg px-3 py-2 bg-white h-28"></select>
+                        <p class="text-[10px] text-slate-400 mt-1">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</p>
                     </div>
                 </div>
 
@@ -391,7 +391,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cotización aprobada</label>
-                    <select id="facCot" required onchange="autocompletarFactura()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white"><!-- Dinámico --></select>
+                    <select id="facCot" required onchange="autocompletarFactura()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white"></select>
                 </div>
                 <input type="text" id="facCliente" required readonly placeholder="Razón Social del Cliente" class="w-full text-sm border rounded-lg px-3 py-2 bg-slate-100">
                 <input type="number" step="0.01" id="facMonto" required placeholder="Monto Total (S/.)" class="w-full text-sm border rounded-lg px-3 py-2">
@@ -400,7 +400,7 @@
                     <input type="date" id="facFechaPago" required class="w-full text-sm border rounded-lg px-3 py-2">
                 </div>
                 <select id="facEstado" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
-                    <option value="Emitida">Emitida (factura ya generada)</option>
+                    <option value="Emitida">Emitida</option>
                     <option value="Pagada">Pagada</option>
                     <option value="Vencida">Vencida</option>
                 </select>
@@ -415,14 +415,14 @@
         </div>
     </div>
 
-    <!-- MODAL BITÁCORA (Registrar Etapa / KM) -->
+    <!-- MODAL BITÁCORA -->
     <div id="modalBitacora" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 class="text-lg font-bold mb-4"><i class="fa-solid fa-route mr-2 text-indigo-600"></i>Registrar Etapa / KM</h3>
             <form onsubmit="guardarEtapaBitacora(event)" class="space-y-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Servicio (Programado / En Ejecución)</label>
-                    <select id="bitCotizacion" required onchange="autocompletarBitacora()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white"><!-- Dinámico --></select>
+                    <select id="bitCotizacion" required onchange="autocompletarBitacora()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white"></select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <input type="text" id="bitPlaca" readonly placeholder="Placa" class="w-full text-sm border rounded-lg px-3 py-2 bg-slate-100 font-mono">
@@ -451,25 +451,21 @@
         </div>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- SCRIPTS DE LÓGICA -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbybUYvBxmU5UJFqpgf8NOAa_jNxCicrszt6x2LER8J0SvcHG3XACMLQ6Tpu8bbaSxx_/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby2IPs0lMSqfZy2oul4RoV3g2nflx0v6-qcoP2RIHh_Z3qEA_JObsJf50ejERU-P6Vt/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
         let vehiculosCache = [];
         let usuariosCache = [];
         let bitacoraCache = [];
-        let fotoBase64Actual = null; // { base64, nombre, mime }
-        let fotoUrlEnEdicion = null; // conserva la foto existente al editar si no se sube una nueva
-        let sesionActual = null; // { id_usuario, nombre, correo, rol }
+        let fotoBase64Actual = null;
+        let fotoUrlEnEdicion = null;
+        let sesionActual = null;
         const ESTADOS_OCUPAN_VEHICULO = ['Programado', 'En Ejecución'];
         const CLAVE_SESION = 'mej_sesion';
 
-        // ---------- Saneamiento de fechas/horas ----------
-        // Red de seguridad en el frontend: aunque el backend ya formatea las fechas/horas
-        // antes de enviarlas, esto limpia cualquier valor ISO largo (ej. "2026-08-26T05:00:00.000Z"
-        // o "1899-12-30T14:08:36.000Z") que pudiera llegar por cualquier otra vía.
         function formatearFecha(valor) {
             if (!valor) return '';
             const str = String(valor).trim();
@@ -497,7 +493,6 @@
             return str;
         }
 
-        // Limpia los 3 campos de programación de un objeto cotización (in-place friendly: retorna copia)
         function sanearProgramacionCotizacion(cot) {
             return {
                 ...cot,
@@ -511,7 +506,6 @@
             restaurarSesion();
         });
 
-        // ---------- Autenticación ----------
         function restaurarSesion() {
             try {
                 const guardada = localStorage.getItem(CLAVE_SESION);
@@ -520,7 +514,7 @@
                     mostrarApp();
                     return;
                 }
-            } catch (e) { /* sesión corrupta, se ignora y se pide login de nuevo */ }
+            } catch (e) {}
             document.getElementById('loginOverlay').classList.remove('hidden');
             document.getElementById('appShell').classList.add('hidden');
         }
@@ -528,7 +522,7 @@
         function mostrarApp() {
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('appShell').classList.remove('hidden');
-            document.getElementById('sesionNombre').textContent = sesionActual.nombre || sesionActual.correo || '';
+            document.getElementById('sesionNombre').textContent = sesionActual.nombre || sesionActual.id_usuario || '';
             document.getElementById('sesionRol').textContent = sesionActual.rol || '';
             aplicarPermisosPorRol(sesionActual.rol);
             cargarDatos();
@@ -536,7 +530,7 @@
 
         async function iniciarSesion(event) {
             event.preventDefault();
-            const correo = document.getElementById('loginCorreo').value.trim();
+            const usuario = document.getElementById('loginUsuario').value.trim();
             const password = document.getElementById('loginPassword').value;
             const btn = document.getElementById('btnLogin');
             const btnTexto = document.getElementById('btnLoginTexto');
@@ -549,7 +543,7 @@
             btnSpinner.classList.remove('hidden');
 
             try {
-                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ tipo: 'login', correo, password }) });
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ tipo: 'login', usuario, password }) });
                 const resp = await res.json();
                 if (resp.result === 'error') throw new Error(resp.message || 'No se pudo iniciar sesión');
 
@@ -572,32 +566,24 @@
             location.reload();
         }
 
-        // ---------- Permisos por rol ----------
-        // ADMIN y SUPERVISOR: acceso completo. OPERADOR: solo Programación + Registrar Etapa/KM.
         function aplicarPermisosPorRol(rol) {
             const rolNorm = String(rol || '').toUpperCase();
             const esOperador = (rolNorm === 'OPERADOR');
 
-            const navsRestringidos = ['navLobby', 'navClientes', 'navCotizaciones', 'navVehiculos', 'navFacturacion'];
-            navsRestringidos.forEach(id => {
+            ['navLobby', 'navClientes', 'navCotizaciones', 'navVehiculos', 'navFacturacion'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.toggle('hidden', esOperador);
             });
-            // navBitacora: visible para todos (Admin/Supervisor lo usan para auditar; Operador para su propio registro)
+
             const navBit = document.getElementById('navBitacora');
             if (navBit) navBit.classList.remove('hidden');
 
             const btnFlotante = document.getElementById('btnRegistrarEtapaFlotante');
             if (btnFlotante) btnFlotante.classList.toggle('hidden', !esOperador);
 
-            if (esOperador) {
-                switchTab('programacion');
-            } else {
-                switchTab('lobby');
-            }
+            switchTab(esOperador ? 'programacion' : 'lobby');
         }
 
-        // ---------- Navegación ----------
         function switchTab(tab) {
             ['Lobby', 'Clientes', 'Cotizaciones', 'Programacion', 'Vehiculos', 'Facturacion', 'Bitacora'].forEach(t => {
                 document.getElementById('sec' + t).classList.add('hidden');
@@ -616,7 +602,6 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        // ---------- Toast ----------
         function mostrarToast(msg, tipo) {
             const t = document.getElementById('toast');
             const colores = { success: 'bg-emerald-600', error: 'bg-red-600', warning: 'bg-amber-600' };
@@ -628,7 +613,6 @@
             window._toastTimer = setTimeout(() => t.classList.add('hidden'), tipo === 'warning' ? 7000 : 3500);
         }
 
-        // ---------- Cliente: crear ----------
         function abrirModalCliente() {
             document.getElementById('cliModo').value = 'crear';
             document.getElementById('modalClienteTitulo').textContent = 'Registrar Nuevo Cliente';
@@ -645,10 +629,9 @@
                 .catch(() => { document.getElementById('cliId').value = "CLI-001"; });
         }
 
-        // ---------- Cliente: editar ----------
         function editarCliente(id) {
             const c = clientesCache.find(x => x.id_cliente === id);
-            if (!c) { mostrarToast('No se encontró ese cliente en la caché local, refresca la página', 'error'); return; }
+            if (!c) return;
             document.getElementById('cliModo').value = 'editar';
             document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
             document.getElementById('btnGuardarClienteTexto').textContent = 'Actualizar Cliente';
@@ -660,7 +643,6 @@
             openModal('modalCliente');
         }
 
-        // ---------- Cotización: abrir modal con ID correlativo automático ----------
         function abrirModalCotizacion() {
             document.getElementById('cotModo').value = 'crear';
             document.getElementById('modalCotizacionTitulo').textContent = 'Nueva Cotización';
@@ -687,10 +669,9 @@
                 .catch(() => { document.getElementById('cotId').value = ""; });
         }
 
-        // ---------- Cotización: editar (precarga todo, incluida programación y foto) ----------
         function editarCotizacion(id) {
             const cot = cotizacionesCache.find(c => c.id_cotizacion === id);
-            if (!cot) { mostrarToast('No se encontró esa cotización en la caché local, refresca la página', 'error'); return; }
+            if (!cot) return;
 
             document.getElementById('cotModo').value = 'editar';
             document.getElementById('modalCotizacionTitulo').textContent = 'Editar Cotización ' + id;
@@ -719,7 +700,7 @@
             if (cot.foto_url) {
                 fotoUrlEnEdicion = cot.foto_url;
                 document.getElementById('cotFotoPreview').src = cot.foto_url;
-                document.getElementById('cotFotoNombre').textContent = 'Foto actual (sube otra para reemplazarla)';
+                document.getElementById('cotFotoNombre').textContent = 'Foto actual';
                 document.getElementById('cotFotoPreviewWrap').classList.remove('hidden');
             } else {
                 fotoUrlEnEdicion = null;
@@ -729,19 +710,18 @@
             openModal('modalCotizacion');
         }
 
-        // ---------- Foto de cotización ----------
         function previsualizarFoto(event) {
             const file = event.target.files[0];
             if (!file) { quitarFoto(); return; }
             if (file.size > 4 * 1024 * 1024) {
-                mostrarToast('La imagen supera 4MB, elige una más liviana', 'error');
+                mostrarToast('La imagen supera 4MB', 'error');
                 event.target.value = '';
                 return;
             }
             const reader = new FileReader();
             reader.onload = function (e) {
                 fotoBase64Actual = { base64: e.target.result, nombre: file.name, mime: file.type };
-                fotoUrlEnEdicion = null; // se reemplaza la foto anterior por la nueva
+                fotoUrlEnEdicion = null;
                 document.getElementById('cotFotoPreview').src = e.target.result;
                 document.getElementById('cotFotoNombre').textContent = file.name;
                 document.getElementById('cotFotoPreviewWrap').classList.remove('hidden');
@@ -756,7 +736,6 @@
             document.getElementById('cotFotoPreviewWrap').classList.add('hidden');
         }
 
-        // ---------- Control de traslapos de vehículo ----------
         function hhmmAMinutos(t) {
             if (!t) return null;
             const partes = t.split(':').map(Number);
@@ -764,8 +743,6 @@
             return partes[0] * 60 + partes[1];
         }
 
-        // Devuelve la cotización en conflicto (o null) si el vehículo ya tiene un servicio
-        // Programado/En Ejecución que se cruza en fecha y horario con el nuevo rango.
         function buscarConflictoVehiculo(vehiculo, fecha, horaInicio, horaFin, idExcluir) {
             if (!vehiculo || !fecha || !horaInicio || !horaFin) return null;
             const nuevoInicio = hhmmAMinutos(horaInicio);
@@ -783,22 +760,18 @@
                 if (existInicio === null || existFin === null) continue;
 
                 if (nuevoInicio < existFin && existInicio < nuevoFin) {
-                    return cot; // hay cruce de horario
+                    return cot;
                 }
             }
             return null;
         }
 
-
-        // ---------- Carga de datos ----------
-        // ---------- Calendario / Programación de servicios ----------
         function renderizarCalendario() {
             const cont = document.getElementById('calendarioContenedor');
             const vacio = document.getElementById('calendarioVacio');
             const filtro = document.getElementById('filtroVehiculoProgramacion');
-            if (!cont || !filtro) return; // la sección aún no está en el DOM en la primera carga
+            if (!cont || !filtro) return;
 
-            // Llena el filtro con los vehículos que realmente tienen servicios programados
             const vehiculosConServicio = [...new Set(cotizacionesCache.filter(c => c.vehiculo_asignado).map(c => c.vehiculo_asignado))].sort();
             const seleccionActual = filtro.value;
             filtro.innerHTML = '<option value="">Todos los vehículos</option>' +
@@ -815,7 +788,6 @@
             }
             vacio.classList.add('hidden');
 
-            // Config visual por estado: color de acento, fondo del pill y si es "tentativo"
             const ESTILO_ESTADO = {
                 'En Cotización': { pill: 'bg-amber-100 text-amber-700 border border-amber-200', barra: 'bg-amber-300', tentativo: true },
                 'Programado':    { pill: 'bg-blue-50 text-blue-700 border border-blue-100',      barra: 'bg-blue-500',   tentativo: false },
@@ -825,7 +797,6 @@
             };
             const estiloDefault = { pill: 'bg-slate-100 text-slate-600 border border-slate-200', barra: 'bg-slate-300', tentativo: false };
 
-            // Agrupa por fecha, y dentro de cada fecha ordena por hora de inicio
             const porFecha = {};
             servicios.forEach(s => {
                 if (!porFecha[s.fecha_programada]) porFecha[s.fecha_programada] = [];
@@ -845,10 +816,8 @@
                     const etiquetaTentativo = estilo.tentativo
                         ? `<span class="text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Tentativo</span>`
                         : '';
-                    const opacidad = estilo.tentativo ? 'opacity-90' : '';
-                    const bordeEstilo = estilo.tentativo ? 'border-dashed' : 'border-solid';
 
-                    return `<div class="flex items-stretch gap-3 rounded-lg border ${bordeEstilo} border-slate-200 ${opacidad} hover:shadow-sm transition overflow-hidden">
+                    return `<div class="flex items-stretch gap-3 rounded-lg border border-slate-200 hover:shadow-sm transition overflow-hidden">
                         <div class="${estilo.barra} w-1.5 shrink-0"></div>
                         <div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2.5 pr-3">
                             <div class="flex items-center gap-3 min-w-0">
@@ -884,7 +853,6 @@
         }
 
         function cargarDatos() {
-            // Usuarios (personal) — para el multi-select de Cotizaciones y para el módulo de Bitácora
             fetch(`${WEB_APP_URL}?action=usuarios`).then(res => res.json()).then(data => {
                 usuariosCache = data;
                 let selectPersonal = document.getElementById('cotPersonal');
@@ -901,7 +869,6 @@
                 }
             });
 
-            // Clientes
             fetch(`${WEB_APP_URL}?action=clientes`).then(res => res.json()).then(data => {
                 clientesCache = data;
                 let tbody = document.getElementById('tableClientes');
@@ -909,24 +876,21 @@
                 tbody.innerHTML = "";
                 selectCotCli.innerHTML = '<option value="">Selecciona un cliente...</option>';
                 data.forEach(c => {
-                    const sinNombre = !c.razon_social;
-                    const razon = c.razon_social || '(Sin razón social — revisa esta fila en el Sheet)';
-                    const claseRazon = sinNombre ? 'text-red-500 italic' : 'font-semibold';
+                    const razon = c.razon_social || '(Sin razón social)';
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-mono font-bold text-blue-600">${c.id_cliente || ''}</td>
-                        <td class="p-3 ${claseRazon}">${razon}</td>
+                        <td class="p-3 font-semibold">${razon}</td>
                         <td class="p-3">${c.ruc || ''}</td>
                         <td class="p-3">${c.contacto || ''}</td>
                         <td class="p-3 text-slate-500">${c.correo || ''}</td>
                         <td class="p-3"><button onclick="editarCliente('${c.id_cliente}')" class="text-blue-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button></td>
                     </tr>`;
-                    if (!sinNombre) {
+                    if (c.razon_social) {
                         selectCotCli.innerHTML += `<option value="${razon}">${razon} — RUC ${c.ruc || 's/n'}</option>`;
                     }
                 });
             });
 
-            // Cotizaciones
             fetch(`${WEB_APP_URL}?action=cotizaciones`).then(res => res.json()).then(data => {
                 cotizacionesCache = data.map(sanearProgramacionCotizacion);
                 let tbody = document.getElementById('tableCotizaciones');
@@ -947,7 +911,6 @@
                         : `<span class="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-full font-medium">No</span>`;
                     const horario = (cot.hora_inicio && cot.hora_fin) ? `${cot.hora_inicio} - ${cot.hora_fin}` : (cot.hora_inicio || cot.hora_fin || '-');
                     const claseEstado = coloresEstado[cot.estado] || 'bg-purple-50 text-purple-700 border border-purple-100';
-                    const etiquetaTentativa = cot.estado === 'En Cotización' ? ` <span class="text-[9px] font-bold uppercase text-amber-600">(Tentativo)</span>` : '';
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-mono font-bold text-purple-600">${cot.id_cotizacion || ''}</td>
                         <td class="p-3 font-semibold">${cot.cliente || ''}</td>
@@ -960,7 +923,7 @@
                         <td class="p-3 text-emerald-700 font-mono">${cot.vehiculo_asignado || '-'}</td>
                         <td class="p-3">${horario}</td>
                         <td class="p-3 text-xs text-slate-600">${cot.conductor_asignado || '-'}</td>
-                        <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span>${etiquetaTentativa}</td>
+                        <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span></td>
                         <td class="p-3">${badgeFacturado}</td>
                         <td class="p-3"><button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button></td>
                     </tr>`;
@@ -973,7 +936,6 @@
                 renderizarCalendario();
             });
 
-            // Vehículos (100% desde la Google Sheet real)
             fetch(`${WEB_APP_URL}?action=vehiculos`).then(res => res.json()).then(data => {
                 vehiculosCache = data;
                 let tbody = document.getElementById('tableVehiculos');
@@ -982,64 +944,46 @@
                 selectCotVeh.innerHTML = '<option value="">Sin asignar aún</option>';
                 data.forEach(v => {
                     const estado = v.estado || 'Disponible';
-                    const colores = {
-                        'Disponible': 'bg-emerald-50 text-emerald-700',
-                        'En Ruta': 'bg-blue-50 text-blue-700',
-                        'Mantenimiento': 'bg-amber-50 text-amber-700'
-                    };
-                    const clase = colores[estado] || 'bg-slate-100 text-slate-600';
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-semibold">${v.vehiculo || ''}</td>
                         <td class="p-3 text-blue-600 font-mono">${v.unidad || ''}</td>
                         <td class="p-3">${v.m3 || '-'}</td>
                         <td class="p-3">${v.tn_carga || ''}</td>
-                        <td class="p-3"><span class="${clase} text-xs px-2 py-1 rounded-full">${estado}</span></td>
+                        <td class="p-3"><span class="bg-emerald-50 text-emerald-700 text-xs px-2 py-1 rounded-full">${estado}</span></td>
                     </tr>`;
-
                     if (v.unidad) {
                         selectCotVeh.innerHTML += `<option value="${v.unidad}">${v.vehiculo || ''} — ${v.unidad} (${estado})</option>`;
                     }
                 });
             });
 
-            // Facturación
             fetch(`${WEB_APP_URL}?action=facturacion`).then(res => res.json()).then(data => {
                 let tbody = document.getElementById('tableFacturacion');
                 tbody.innerHTML = "";
                 data.forEach(f => {
-                    const colores = { 'Pagada': 'bg-emerald-50 text-emerald-700', 'Emitida': 'bg-amber-50 text-amber-700', 'Vencida': 'bg-red-50 text-red-700' };
-                    const clase = colores[f.estado] || 'bg-slate-100 text-slate-600';
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-medium text-amber-600 font-mono">${f.id_facturacion || ''}</td>
                         <td class="p-3 text-purple-600">${f.cotizacion || ''}</td>
                         <td class="p-3 font-semibold">${f.cliente || ''}</td>
                         <td class="p-3 font-mono">S/. ${f.monto || '0.00'}</td>
                         <td class="p-3">${formatearFecha(f.fecha_pago) || '-'}</td>
-                        <td class="p-3"><span class="${clase} text-xs px-2 py-1 rounded-full font-medium">${f.estado || ''}</span></td>
+                        <td class="p-3"><span class="bg-amber-50 text-amber-700 text-xs px-2 py-1 rounded-full font-medium">${f.estado || ''}</span></td>
                     </tr>`;
                 });
             });
 
-            // Bitácora de rutas
             fetch(`${WEB_APP_URL}?action=bitacora`).then(res => res.json()).then(data => {
                 bitacoraCache = data;
                 let tbody = document.getElementById('tableBitacora');
                 if (!tbody) return;
                 tbody.innerHTML = "";
-                const coloresEtapa = {
-                    'Salida Base MEJ': 'bg-blue-50 text-blue-700',
-                    'Llegada a Cliente': 'bg-amber-50 text-amber-700',
-                    'Salida de Cliente': 'bg-orange-50 text-orange-700',
-                    'Retorno Base MEJ': 'bg-emerald-50 text-emerald-700'
-                };
                 const ordenados = data.slice().sort((a, b) => String(b.fecha_hora || '').localeCompare(String(a.fecha_hora || '')));
                 ordenados.forEach(b => {
-                    const clase = coloresEtapa[b.etapa] || 'bg-slate-100 text-slate-600';
                     const usuario = usuariosCache.find(u => u.id_usuario === b.id_usuario);
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-mono font-bold text-purple-600">${b.id_cotizacion || ''}</td>
                         <td class="p-3 font-mono">${b.placa_vehiculo || ''}</td>
-                        <td class="p-3"><span class="${clase} text-xs px-2 py-1 rounded-full font-medium">${b.etapa || ''}</span></td>
+                        <td class="p-3"><span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">${b.etapa || ''}</span></td>
                         <td class="p-3 text-slate-500">${b.fecha_hora || ''}</td>
                         <td class="p-3">${b.km_lectura || ''}</td>
                         <td class="p-3">${usuario ? usuario.nombre : (b.id_usuario || '')}</td>
@@ -1049,7 +993,6 @@
             });
         }
 
-        // Autocompleta cliente y monto de la factura al elegir la cotización
         function autocompletarFactura() {
             const idCot = document.getElementById('facCot').value;
             const cot = cotizacionesCache.find(c => c.id_cotizacion === idCot);
@@ -1059,7 +1002,6 @@
             }
         }
 
-        // ---------- Bitácora de rutas ----------
         function abrirModalBitacora() {
             const select = document.getElementById('bitCotizacion');
             const disponibles = cotizacionesCache.filter(c => c.estado === 'Programado' || c.estado === 'En Ejecución');
@@ -1074,7 +1016,7 @@
             document.getElementById('bitObservaciones').value = '';
 
             if (disponibles.length === 0) {
-                mostrarToast('No hay servicios en estado Programado o En Ejecución para registrar una etapa.', 'warning');
+                mostrarToast('No hay servicios en estado Programado o En Ejecución.', 'warning');
             }
             openModal('modalBitacora');
         }
@@ -1087,7 +1029,6 @@
                 document.getElementById('bitCliente').value = cot.cliente || '';
                 document.getElementById('bitPersonal').value = cot.conductor_asignado || 'Sin personal asignado';
 
-                // Sugiere automáticamente la siguiente etapa según lo ya registrado para este servicio
                 const etapasOrden = ['Salida Base MEJ', 'Llegada a Cliente', 'Salida de Cliente', 'Retorno Base MEJ'];
                 const registradas = bitacoraCache.filter(b => b.id_cotizacion === idCot).map(b => b.etapa);
                 const siguiente = etapasOrden.find(e => !registradas.includes(e));
@@ -1106,8 +1047,8 @@
             const btnSpinner = document.getElementById('btnGuardarBitacoraSpinner');
 
             const idCotizacion = document.getElementById('bitCotizacion').value;
-            if (!idCotizacion) { mostrarToast('Selecciona un servicio antes de registrar la etapa.', 'error'); return; }
-            if (!sesionActual) { mostrarToast('Tu sesión expiró, vuelve a iniciar sesión.', 'error'); return; }
+            if (!idCotizacion) { mostrarToast('Selecciona un servicio.', 'error'); return; }
+            if (!sesionActual) { mostrarToast('Sesión expirada.', 'error'); return; }
 
             const data = {
                 tipo: 'bitacora',
@@ -1126,15 +1067,14 @@
             try {
                 const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
                 const resp = await res.json();
-                if (resp.result === 'error') throw new Error(resp.message || 'Error desconocido');
+                if (resp.result === 'error') throw new Error(resp.message || 'Error al guardar');
 
                 closeModal('modalBitacora');
                 cargarDatos();
-                const mensajeExtra = resp.nuevo_estado_cotizacion ? ` El servicio ${idCotizacion} pasó a estado "${resp.nuevo_estado_cotizacion}".` : '';
-                mostrarToast(`Etapa "${data.etapa}" registrada con éxito.${mensajeExtra}`, 'success');
+                mostrarToast(`Etapa "${data.etapa}" registrada con éxito.`, 'success');
                 event.target.reset();
             } catch (err) {
-                mostrarToast('Error al registrar la etapa: ' + err.message, 'error');
+                mostrarToast('Error al registrar: ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
                 btnTexto.textContent = 'Registrar Etapa';
@@ -1142,7 +1082,6 @@
             }
         }
 
-        // ---------- Guardar (con spinner + toast + navegación automática) ----------
         async function guardarRegistro(event, tipo) {
             event.preventDefault();
             let data = { tipo: tipo };
@@ -1151,19 +1090,14 @@
             const btnSpinner = document.getElementById('btnGuardar' + capitalize(tipo) + 'Spinner');
 
             if (tipo === 'cliente') {
-                data.accion = document.getElementById('cliModo').value; // 'crear' o 'editar'
+                data.accion = document.getElementById('cliModo').value;
                 data.id_cliente = document.getElementById('cliId').value;
                 data.razon_social = document.getElementById('cliRazon').value.trim();
                 data.ruc = document.getElementById('cliRuc').value.trim();
                 data.contacto = document.getElementById('cliContacto').value.trim();
                 data.correo = document.getElementById('cliCorreo').value.trim();
-
-                if (!data.razon_social) {
-                    mostrarToast('La Razón Social es obligatoria', 'error');
-                    return;
-                }
             } else if (tipo === 'cotizacion') {
-                data.accion = document.getElementById('cotModo').value; // 'crear' o 'editar'
+                data.accion = document.getElementById('cotModo').value;
                 data.id_cotizacion = document.getElementById('cotId').value || null;
                 data.cliente = document.getElementById('cotCliente').value;
                 data.descripcion = document.getElementById('cotDesc').value;
@@ -1184,20 +1118,16 @@
                     data.foto_name = fotoBase64Actual.nombre;
                     data.foto_mime = fotoBase64Actual.mime;
                 } else if (fotoUrlEnEdicion) {
-                    data.foto_url = fotoUrlEnEdicion; // conserva la foto ya subida si no se eligió una nueva
+                    data.foto_url = fotoUrlEnEdicion;
                 }
 
-                // Control de traslapos: solo bloquea si el estado ocupa el vehículo
                 if (ESTADOS_OCUPAN_VEHICULO.includes(data.estado)) {
                     const conflicto = buscarConflictoVehiculo(
                         data.vehiculo_asignado, data.fecha_programada, data.hora_inicio, data.hora_fin,
                         data.accion === 'editar' ? data.id_cotizacion : null
                     );
                     if (conflicto) {
-                        mostrarToast(
-                            `Conflicto de horario: el vehículo ${data.vehiculo_asignado} ya tiene el servicio ${conflicto.id_cotizacion} (${conflicto.cliente}) el ${conflicto.fecha_programada} de ${conflicto.hora_inicio} a ${conflicto.hora_fin}. Elige otro horario o vehículo.`,
-                            'error'
-                        );
+                        mostrarToast(`Conflicto de horario: el vehículo ${data.vehiculo_asignado} está ocupado por ${conflicto.id_cotizacion}.`, 'error');
                         return;
                     }
                 }
@@ -1216,7 +1146,6 @@
                 data.estado = document.getElementById('facEstado').value;
             }
 
-            // UX: activar spinner y bloquear botón
             btn.disabled = true;
             btnTexto.textContent = "Guardando...";
             btnSpinner.classList.remove('hidden');
@@ -1224,28 +1153,12 @@
             try {
                 const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
                 const resp = await res.json();
-                if (resp.result === 'error') throw new Error(resp.message || 'Error desconocido');
+                if (resp.result === 'error') throw new Error(resp.message || 'Error al guardar');
 
                 closeModal('modal' + capitalize(tipo));
                 cargarDatos();
-
-                if (resp.advertencia) {
-                    mostrarToast(resp.advertencia, 'warning');
-                } else {
-                    mostrarToast(
-                        (data.accion === 'editar' && tipo === 'cliente') ? 'Cliente actualizado con éxito' :
-                        (data.accion === 'editar' && tipo === 'cotizacion') ? 'Cotización actualizada con éxito' :
-                        'Registro guardado con éxito',
-                        'success'
-                    );
-                }
-
-                // Redirección automática según el tipo de registro
-                if (tipo === 'cliente') switchTab('clientes');
-                else if (tipo === 'cotizacion') switchTab('cotizaciones');
-                else if (tipo === 'vehiculo') switchTab('vehiculos');
-                else if (tipo === 'facturacion') switchTab('facturacion');
-
+                mostrarToast('Registro guardado con éxito', 'success');
+                switchTab(tipo === 'cliente' ? 'clientes' : tipo === 'cotizacion' ? 'cotizaciones' : tipo === 'vehiculo' ? 'vehiculos' : 'facturacion');
                 event.target.reset();
                 quitarFoto();
             } catch (err) {
@@ -1259,8 +1172,6 @@
 
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
     </script>
-
-    </div><!-- /appShell -->
-
+    </div>
 </body>
 </html>
