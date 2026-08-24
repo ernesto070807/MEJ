@@ -329,12 +329,13 @@
         // ---------- Toast ----------
         function mostrarToast(msg, tipo) {
             const t = document.getElementById('toast');
-            const colores = { success: 'bg-emerald-600', error: 'bg-red-600' };
-            t.className = `toast fixed bottom-6 left-6 z-50 ${colores[tipo] || 'bg-slate-800'} text-white px-4 py-3 rounded-lg shadow-lg text-sm flex items-center gap-2`;
-            t.innerHTML = `<i class="fa-solid ${tipo === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i> ${msg}`;
+            const colores = { success: 'bg-emerald-600', error: 'bg-red-600', warning: 'bg-amber-600' };
+            const iconos = { success: 'fa-circle-check', error: 'fa-triangle-exclamation', warning: 'fa-triangle-exclamation' };
+            t.className = `toast fixed bottom-6 left-6 z-50 ${colores[tipo] || 'bg-slate-800'} text-white px-4 py-3 rounded-lg shadow-lg text-sm flex items-center gap-2 max-w-md`;
+            t.innerHTML = `<i class="fa-solid ${iconos[tipo] || 'fa-circle-info'}"></i> ${msg}`;
             t.classList.remove('hidden');
             clearTimeout(window._toastTimer);
-            window._toastTimer = setTimeout(() => t.classList.add('hidden'), 3500);
+            window._toastTimer = setTimeout(() => t.classList.add('hidden'), tipo === 'warning' ? 7000 : 3500);
         }
 
         // ---------- Cliente: crear ----------
@@ -583,10 +584,15 @@
 
                 closeModal('modal' + capitalize(tipo));
                 cargarDatos();
-                mostrarToast(
-                    tipo === 'cliente' && data.accion === 'editar' ? 'Cliente actualizado con éxito' : 'Registro guardado con éxito',
-                    'success'
-                );
+
+                if (resp.advertencia) {
+                    mostrarToast(resp.advertencia, 'warning');
+                } else {
+                    mostrarToast(
+                        tipo === 'cliente' && data.accion === 'editar' ? 'Cliente actualizado con éxito' : 'Registro guardado con éxito',
+                        'success'
+                    );
+                }
 
                 // Redirección automática según el tipo de registro
                 if (tipo === 'cliente') switchTab('clientes');
