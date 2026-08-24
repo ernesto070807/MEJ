@@ -87,7 +87,7 @@
         <div id="secCotizaciones" class="space-y-4 hidden">
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold text-slate-900">Gestión de Cotizaciones</h2>
-                <button onclick="openModal('modalCotizacion')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-plus mr-1"></i> Nueva Cotización</button>
+                <button onclick="abrirModalCotizacion()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-plus mr-1"></i> Nueva Cotización</button>
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -367,6 +367,25 @@
             document.getElementById('cliContacto').value = c.contacto || '';
             document.getElementById('cliCorreo').value = c.correo || '';
             openModal('modalCliente');
+        }
+
+        // ---------- Cotización: abrir modal con ID correlativo automático ----------
+        function abrirModalCotizacion() {
+            document.getElementById('cotId').value = "Generando...";
+            document.getElementById('cotCliente').value = '';
+            document.getElementById('cotDesc').value = '';
+            document.getElementById('cotPeso').value = '';
+            document.getElementById('cotTipoMaterial').value = '';
+            document.getElementById('cotUbicacion').value = '';
+            document.getElementById('cotTipoPago').value = '';
+            document.getElementById('cotMonto').value = '';
+            document.getElementById('cotEstado').value = 'Pendiente';
+            quitarFoto();
+            openModal('modalCotizacion');
+            fetch(`${WEB_APP_URL}?action=siguiente_id_cotizacion`)
+                .then(res => res.json())
+                .then(data => { document.getElementById('cotId').value = data.nextId; })
+                .catch(() => { document.getElementById('cotId').value = ""; });
         }
 
         // ---------- Foto de cotización ----------
