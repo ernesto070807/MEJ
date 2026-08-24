@@ -77,7 +77,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cliente</th><th class="p-3">Razón Social</th><th class="p-3">RUC</th><th class="p-3">Contacto</th><th class="p-3">Correo</th></tr></thead>
+                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cliente</th><th class="p-3">Razón Social</th><th class="p-3">RUC</th><th class="p-3">Contacto</th><th class="p-3">Correo</th><th class="p-3">Acción</th></tr></thead>
                     <tbody id="tableClientes" class="divide-y divide-slate-200 text-sm"></tbody>
                 </table>
             </div>
@@ -144,10 +144,11 @@
     <!-- MODAL CLIENTE (CORRELATIVO AUTOMÁTICO) -->
     <div id="modalCliente" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 class="text-lg font-bold mb-4">Registrar Nuevo Cliente</h3>
+            <h3 id="modalClienteTitulo" class="text-lg font-bold mb-4">Registrar Nuevo Cliente</h3>
             <form onsubmit="guardarRegistro(event, 'cliente')" class="space-y-3">
+                <input type="hidden" id="cliModo" value="crear">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">ID Correlativo Automático</label>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">ID Cliente</label>
                     <input type="text" id="cliId" readonly class="w-full text-sm border bg-slate-100 rounded-lg px-3 py-2 font-mono font-bold text-blue-600">
                 </div>
                 <input type="text" id="cliRazon" required placeholder="Razón Social (Ej. Minera S.A.)" class="w-full text-sm border rounded-lg px-3 py-2">
@@ -204,7 +205,15 @@
                     <input type="number" step="0.01" id="cotMonto" required placeholder="Monto (S/.)" class="w-full text-sm border rounded-lg px-3 py-2">
                 </div>
 
-                <input type="url" id="cotFoto" placeholder="Enlace a foto de la carga/zona (opcional)" class="w-full text-sm border rounded-lg px-3 py-2">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Foto de la carga/zona (opcional)</label>
+                    <input type="file" id="cotFotoFile" accept="image/*" onchange="previsualizarFoto(event)" class="w-full text-sm border rounded-lg px-3 py-2 bg-white file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-purple-50 file:text-purple-700 file:text-xs">
+                    <div id="cotFotoPreviewWrap" class="hidden mt-2 flex items-center gap-2">
+                        <img id="cotFotoPreview" class="w-16 h-16 object-cover rounded-lg border border-slate-200">
+                        <span id="cotFotoNombre" class="text-xs text-slate-500"></span>
+                        <button type="button" onclick="quitarFoto()" class="text-xs text-red-600 hover:underline ml-auto">Quitar</button>
+                    </div>
+                </div>
 
                 <select id="cotEstado" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
                     <option value="Pendiente">Pendiente</option>
@@ -291,6 +300,8 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxSAQY7rSo2gEQ97gr3AQkRGXtjq7rw7cPJF0ElG-LZj8RNeL2zKpeW4qt5qJN3tVbr/exec'; // Tu URL real
 
         let cotizacionesCache = [];
+        let clientesCache = [];
+        let fotoBase64Actual = null; // { base64, nombre, mime }
 
         document.addEventListener("DOMContentLoaded", () => {
             cargarDatos();
@@ -326,9 +337,16 @@
             window._toastTimer = setTimeout(() => t.classList.add('hidden'), 3500);
         }
 
-        // ---------- Cliente ----------
+        // ---------- Cliente: crear ----------
         function abrirModalCliente() {
+            document.getElementById('cliModo').value = 'crear';
+            document.getElementById('modalClienteTitulo').textContent = 'Registrar Nuevo Cliente';
+            document.getElementById('btnGuardarClienteTexto').textContent = 'Guardar Cliente';
             document.getElementById('cliId').value = "Generando...";
+            document.getElementById('cliRazon').value = '';
+            document.getElementById('cliRuc').value = '';
+            document.getElementById('cliContacto').value = '';
+            document.getElementById('cliCorreo').value = '';
             openModal('modalCliente');
             fetch(`${WEB_APP_URL}?action=siguiente_id`)
                 .then(res => res.json())
@@ -336,18 +354,70 @@
                 .catch(() => { document.getElementById('cliId').value = "CLI-001"; });
         }
 
+        // ---------- Cliente: editar ----------
+        function editarCliente(id) {
+            const c = clientesCache.find(x => x.id_cliente === id);
+            if (!c) { mostrarToast('No se encontró ese cliente en la caché local, refresca la página', 'error'); return; }
+            document.getElementById('cliModo').value = 'editar';
+            document.getElementById('modalClienteTitulo').textContent = 'Editar Cliente';
+            document.getElementById('btnGuardarClienteTexto').textContent = 'Actualizar Cliente';
+            document.getElementById('cliId').value = c.id_cliente || '';
+            document.getElementById('cliRazon').value = c.razon_social || '';
+            document.getElementById('cliRuc').value = c.ruc || '';
+            document.getElementById('cliContacto').value = c.contacto || '';
+            document.getElementById('cliCorreo').value = c.correo || '';
+            openModal('modalCliente');
+        }
+
+        // ---------- Foto de cotización ----------
+        function previsualizarFoto(event) {
+            const file = event.target.files[0];
+            if (!file) { quitarFoto(); return; }
+            if (file.size > 4 * 1024 * 1024) {
+                mostrarToast('La imagen supera 4MB, elige una más liviana', 'error');
+                event.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                fotoBase64Actual = { base64: e.target.result, nombre: file.name, mime: file.type };
+                document.getElementById('cotFotoPreview').src = e.target.result;
+                document.getElementById('cotFotoNombre').textContent = file.name;
+                document.getElementById('cotFotoPreviewWrap').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function quitarFoto() {
+            fotoBase64Actual = null;
+            document.getElementById('cotFotoFile').value = '';
+            document.getElementById('cotFotoPreviewWrap').classList.add('hidden');
+        }
+
         // ---------- Carga de datos ----------
         function cargarDatos() {
             // Clientes
             fetch(`${WEB_APP_URL}?action=clientes`).then(res => res.json()).then(data => {
+                clientesCache = data;
                 let tbody = document.getElementById('tableClientes');
                 let selectCotCli = document.getElementById('cotCliente');
                 tbody.innerHTML = "";
                 selectCotCli.innerHTML = '<option value="">Selecciona un cliente...</option>';
                 data.forEach(c => {
-                    const razon = c.razon_social || '(Sin razón social)';
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 pl-4 font-mono font-bold text-blue-600">${c.id_cliente || ''}</td><td class="p-3 font-semibold">${razon}</td><td class="p-3">${c.ruc || ''}</td><td class="p-3">${c.contacto || ''}</td><td class="p-3 text-slate-500">${c.correo || ''}</td></tr>`;
-                    selectCotCli.innerHTML += `<option value="${razon}">${razon} — RUC ${c.ruc || 's/n'}</option>`;
+                    const sinNombre = !c.razon_social;
+                    const razon = c.razon_social || '(Sin razón social — revisa esta fila en el Sheet)';
+                    const claseRazon = sinNombre ? 'text-red-500 italic' : 'font-semibold';
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50">
+                        <td class="p-3 pl-4 font-mono font-bold text-blue-600">${c.id_cliente || ''}</td>
+                        <td class="p-3 ${claseRazon}">${razon}</td>
+                        <td class="p-3">${c.ruc || ''}</td>
+                        <td class="p-3">${c.contacto || ''}</td>
+                        <td class="p-3 text-slate-500">${c.correo || ''}</td>
+                        <td class="p-3"><button onclick="editarCliente('${c.id_cliente}')" class="text-blue-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button></td>
+                    </tr>`;
+                    if (!sinNombre) {
+                        selectCotCli.innerHTML += `<option value="${razon}">${razon} — RUC ${c.ruc || 's/n'}</option>`;
+                    }
                 });
             });
 
@@ -433,7 +503,7 @@
         }
 
         // ---------- Guardar (con spinner + toast + navegación automática) ----------
-        function guardarRegistro(event, tipo) {
+        async function guardarRegistro(event, tipo) {
             event.preventDefault();
             let data = { tipo: tipo };
             const btn = document.getElementById('btnGuardar' + capitalize(tipo));
@@ -441,11 +511,17 @@
             const btnSpinner = document.getElementById('btnGuardar' + capitalize(tipo) + 'Spinner');
 
             if (tipo === 'cliente') {
+                data.accion = document.getElementById('cliModo').value; // 'crear' o 'editar'
                 data.id_cliente = document.getElementById('cliId').value;
-                data.razon_social = document.getElementById('cliRazon').value;
-                data.ruc = document.getElementById('cliRuc').value;
-                data.contacto = document.getElementById('cliContacto').value;
-                data.correo = document.getElementById('cliCorreo').value;
+                data.razon_social = document.getElementById('cliRazon').value.trim();
+                data.ruc = document.getElementById('cliRuc').value.trim();
+                data.contacto = document.getElementById('cliContacto').value.trim();
+                data.correo = document.getElementById('cliCorreo').value.trim();
+
+                if (!data.razon_social) {
+                    mostrarToast('La Razón Social es obligatoria', 'error');
+                    return;
+                }
             } else if (tipo === 'cotizacion') {
                 data.id_cotizacion = document.getElementById('cotId').value || null;
                 data.cliente = document.getElementById('cotCliente').value;
@@ -455,8 +531,12 @@
                 data.ubicacion = document.getElementById('cotUbicacion').value;
                 data.tipo_pago = document.getElementById('cotTipoPago').value;
                 data.monto = document.getElementById('cotMonto').value;
-                data.foto_url = document.getElementById('cotFoto').value;
                 data.estado = document.getElementById('cotEstado').value;
+                if (fotoBase64Actual) {
+                    data.foto_base64 = fotoBase64Actual.base64;
+                    data.foto_name = fotoBase64Actual.nombre;
+                    data.foto_mime = fotoBase64Actual.mime;
+                }
             } else if (tipo === 'vehiculo') {
                 data.modelo = document.getElementById('vehModelo').value;
                 data.placa = document.getElementById('vehPlaca').value;
@@ -477,31 +557,33 @@
             btnTexto.textContent = "Guardando...";
             btnSpinner.classList.remove('hidden');
 
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
-                .then(res => res.json())
-                .then(resp => {
-                    if (resp.result === 'error') throw new Error(resp.message || 'Error desconocido');
+            try {
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
+                const resp = await res.json();
+                if (resp.result === 'error') throw new Error(resp.message || 'Error desconocido');
 
-                    closeModal('modal' + capitalize(tipo));
-                    cargarDatos();
-                    mostrarToast('Registro guardado con éxito', 'success');
+                closeModal('modal' + capitalize(tipo));
+                cargarDatos();
+                mostrarToast(
+                    tipo === 'cliente' && data.accion === 'editar' ? 'Cliente actualizado con éxito' : 'Registro guardado con éxito',
+                    'success'
+                );
 
-                    // Redirección automática según el tipo de registro
-                    if (tipo === 'cliente') switchTab('clientes');
-                    else if (tipo === 'cotizacion') switchTab('cotizaciones');
-                    else if (tipo === 'vehiculo') switchTab('vehiculos');
-                    else if (tipo === 'facturacion') switchTab('facturacion');
+                // Redirección automática según el tipo de registro
+                if (tipo === 'cliente') switchTab('clientes');
+                else if (tipo === 'cotizacion') switchTab('cotizaciones');
+                else if (tipo === 'vehiculo') switchTab('vehiculos');
+                else if (tipo === 'facturacion') switchTab('facturacion');
 
-                    event.target.reset();
-                })
-                .catch(err => {
-                    mostrarToast('Error al guardar: ' + err.message, 'error');
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btnTexto.textContent = "Guardar " + capitalize(tipo === 'facturacion' ? 'Factura' : tipo);
-                    btnSpinner.classList.add('hidden');
-                });
+                event.target.reset();
+                quitarFoto();
+            } catch (err) {
+                mostrarToast('Error al guardar: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btnTexto.textContent = tipo === 'facturacion' ? 'Guardar Factura' : ('Guardar ' + capitalize(tipo));
+                btnSpinner.classList.add('hidden');
+            }
         }
 
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
