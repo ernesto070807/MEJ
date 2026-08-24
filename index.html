@@ -29,6 +29,7 @@
                 <button onclick="switchTab('lobby')" id="navLobby" class="px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700"><i class="fa-solid fa-house mr-1"></i> Lobby</button>
                 <button onclick="switchTab('clientes')" id="navClientes" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-users mr-1"></i> Clientes</button>
                 <button onclick="switchTab('cotizaciones')" id="navCotizaciones" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Cotizaciones</button>
+                <button onclick="switchTab('programacion')" id="navProgramacion" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-calendar-days mr-1"></i> Programación</button>
                 <button onclick="switchTab('vehiculos')" id="navVehiculos" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-truck mr-1"></i> Flota Real</button>
                 <button onclick="switchTab('facturacion')" id="navFacturacion" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-receipt mr-1"></i> Facturación</button>
             </nav>
@@ -45,7 +46,7 @@
                 <p class="text-blue-200 text-sm max-w-2xl">Administración integral del ciclo del servicio, alta automatizada de clientes con códigos correlativos, control de la flota vehicular real y facturación vinculada.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 <div onclick="switchTab('clientes')" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-500 cursor-pointer transition group">
                     <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition"><i class="fa-solid fa-users"></i></div>
                     <h3 class="font-bold text-slate-900 text-lg">Clientes</h3>
@@ -55,6 +56,11 @@
                     <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-purple-600 group-hover:text-white transition"><i class="fa-solid fa-file-invoice-dollar"></i></div>
                     <h3 class="font-bold text-slate-900 text-lg">Cotizaciones</h3>
                     <p class="text-xs text-slate-500 mt-1">Ingresa la cotización</p>
+                </div>
+                <div onclick="switchTab('programacion')" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-500 cursor-pointer transition group">
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-indigo-600 group-hover:text-white transition"><i class="fa-solid fa-calendar-days"></i></div>
+                    <h3 class="font-bold text-slate-900 text-lg">Programación</h3>
+                    <p class="text-xs text-slate-500 mt-1">Revisa el calendario de servicios</p>
                 </div>
                 <div onclick="switchTab('vehiculos')" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-emerald-500 cursor-pointer transition group">
                     <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-emerald-600 group-hover:text-white transition"><i class="fa-solid fa-truck"></i></div>
@@ -91,10 +97,25 @@
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Descripción</th><th class="p-3">Peso (TN)</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Estado</th><th class="p-3">Facturado</th></tr></thead>
+                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Descripción</th><th class="p-3">Peso (TN)</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Estado</th><th class="p-3">Facturado</th><th class="p-3">Acción</th></tr></thead>
                     <tbody id="tableCotizaciones" class="divide-y divide-slate-200 text-sm"></tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- SECCIÓN PROGRAMACIÓN / CALENDARIO -->
+        <div id="secProgramacion" class="space-y-4 hidden">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Programación / Calendario de Servicios</h2>
+                    <p class="text-xs text-slate-500">Servicios agendados por fecha y vehículo. Solo se muestran cotizaciones con fecha programada.</p>
+                </div>
+                <select id="filtroVehiculoProgramacion" onchange="renderizarCalendario()" class="text-sm border rounded-lg px-3 py-2 bg-white w-full md:w-64">
+                    <option value="">Todos los vehículos</option>
+                </select>
+            </div>
+            <div id="calendarioContenedor" class="space-y-4"></div>
+            <p id="calendarioVacio" class="hidden text-sm text-slate-500 text-center py-10">No hay servicios programados todavía. Asigna una fecha y vehículo en una cotización para que aparezca aquí.</p>
         </div>
 
         <!-- SECCIÓN VEHÍCULOS (FLOTA REAL MEJ) -->
@@ -119,7 +140,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-xl font-bold text-slate-900">Módulo de Facturación</h2>
-                    <p class="text-xs text-slate-500">Comprobantes vinculados a cotizaciones comerciales aprobadas.</p>
+                    <p class="text-xs text-slate-500">Comprobantes vinculados a cotizaciones en estado Programado o Completado.</p>
                 </div>
                 <button onclick="openModal('modalFacturacion')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-file-invoice mr-1"></i> Emitir Factura</button>
             </div>
@@ -169,8 +190,9 @@
     <!-- MODAL COTIZACION -->
     <div id="modalCotizacion" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 my-8">
-            <h3 class="text-lg font-bold mb-4">Nueva Cotización</h3>
+            <h3 id="modalCotizacionTitulo" class="text-lg font-bold mb-4">Nueva Cotización</h3>
             <form onsubmit="guardarRegistro(event, 'cotizacion')" class="space-y-3">
+                <input type="hidden" id="cotModo" value="crear">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">ID Cotización (Automático)</label>
                     <input type="text" id="cotId" readonly class="w-full text-sm border bg-slate-100 rounded-lg px-3 py-2 font-mono font-bold text-purple-600">
@@ -241,8 +263,10 @@
                 </div>
 
                 <select id="cotEstado" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Aprobada">Aprobada</option>
+                    <option value="En Cotización">En Cotización</option>
+                    <option value="Programado">Programado</option>
+                    <option value="En Ejecución">En Ejecución</option>
+                    <option value="Completado">Completado</option>
                     <option value="Rechazada">Rechazada</option>
                 </select>
                 <div class="flex justify-end space-x-2 pt-2">
@@ -322,12 +346,14 @@
 
     <!-- SCRIPTS -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzviOvk24OfQ1S51xmrSfZvOSjfpnKQyD-RNK8bNBuaNZQW3TFoaQJnTzPzHBiwNzFN/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUQ-1ce9pEMPW6AsoYTuyL29ZuO0bISI3Os7eV3FrDSuneGiByZiyo44z8GccjHBkK/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
         let vehiculosCache = [];
         let fotoBase64Actual = null; // { base64, nombre, mime }
+        let fotoUrlEnEdicion = null; // conserva la foto existente al editar si no se sube una nueva
+        const ESTADOS_OCUPAN_VEHICULO = ['Programado', 'En Ejecución'];
 
         document.addEventListener("DOMContentLoaded", () => {
             cargarDatos();
@@ -335,7 +361,7 @@
 
         // ---------- Navegación ----------
         function switchTab(tab) {
-            ['Lobby', 'Clientes', 'Cotizaciones', 'Vehiculos', 'Facturacion'].forEach(t => {
+            ['Lobby', 'Clientes', 'Cotizaciones', 'Programacion', 'Vehiculos', 'Facturacion'].forEach(t => {
                 document.getElementById('sec' + t).classList.add('hidden');
                 let nav = document.getElementById('nav' + t);
                 if (nav) nav.className = "px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100";
@@ -398,6 +424,9 @@
 
         // ---------- Cotización: abrir modal con ID correlativo automático ----------
         function abrirModalCotizacion() {
+            document.getElementById('cotModo').value = 'crear';
+            document.getElementById('modalCotizacionTitulo').textContent = 'Nueva Cotización';
+            document.getElementById('btnGuardarCotizacionTexto').textContent = 'Guardar Cotización';
             document.getElementById('cotId').value = "Generando...";
             document.getElementById('cotCliente').value = '';
             document.getElementById('cotDesc').value = '';
@@ -406,7 +435,7 @@
             document.getElementById('cotUbicacion').value = '';
             document.getElementById('cotTipoPago').value = '';
             document.getElementById('cotMonto').value = '';
-            document.getElementById('cotEstado').value = 'Pendiente';
+            document.getElementById('cotEstado').value = 'En Cotización';
             document.getElementById('cotFechaProgramada').value = '';
             document.getElementById('cotVehiculoAsignado').value = '';
             document.getElementById('cotHoraInicio').value = '';
@@ -417,6 +446,43 @@
                 .then(res => res.json())
                 .then(data => { document.getElementById('cotId').value = data.nextId; })
                 .catch(() => { document.getElementById('cotId').value = ""; });
+        }
+
+        // ---------- Cotización: editar (precarga todo, incluida programación y foto) ----------
+        function editarCotizacion(id) {
+            const cot = cotizacionesCache.find(c => c.id_cotizacion === id);
+            if (!cot) { mostrarToast('No se encontró esa cotización en la caché local, refresca la página', 'error'); return; }
+
+            document.getElementById('cotModo').value = 'editar';
+            document.getElementById('modalCotizacionTitulo').textContent = 'Editar Cotización ' + id;
+            document.getElementById('btnGuardarCotizacionTexto').textContent = 'Actualizar Cotización';
+            document.getElementById('cotId').value = cot.id_cotizacion || '';
+            document.getElementById('cotCliente').value = cot.cliente || '';
+            document.getElementById('cotDesc').value = cot.descripcion || '';
+            document.getElementById('cotPeso').value = cot.peso_aprox || '';
+            document.getElementById('cotTipoMaterial').value = cot.tipo_material || '';
+            document.getElementById('cotUbicacion').value = cot.ubicacion || '';
+            document.getElementById('cotTipoPago').value = cot.tipo_pago || '';
+            document.getElementById('cotMonto').value = cot.monto || '';
+            document.getElementById('cotEstado').value = cot.estado || 'En Cotización';
+            document.getElementById('cotFechaProgramada').value = cot.fecha_programada || '';
+            document.getElementById('cotVehiculoAsignado').value = cot.vehiculo_asignado || '';
+            document.getElementById('cotHoraInicio').value = cot.hora_inicio || '';
+            document.getElementById('cotHoraFin').value = cot.hora_fin || '';
+
+            fotoBase64Actual = null;
+            document.getElementById('cotFotoFile').value = '';
+            if (cot.foto_url) {
+                fotoUrlEnEdicion = cot.foto_url;
+                document.getElementById('cotFotoPreview').src = cot.foto_url;
+                document.getElementById('cotFotoNombre').textContent = 'Foto actual (sube otra para reemplazarla)';
+                document.getElementById('cotFotoPreviewWrap').classList.remove('hidden');
+            } else {
+                fotoUrlEnEdicion = null;
+                document.getElementById('cotFotoPreviewWrap').classList.add('hidden');
+            }
+
+            openModal('modalCotizacion');
         }
 
         // ---------- Foto de cotización ----------
@@ -431,6 +497,7 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 fotoBase64Actual = { base64: e.target.result, nombre: file.name, mime: file.type };
+                fotoUrlEnEdicion = null; // se reemplaza la foto anterior por la nueva
                 document.getElementById('cotFotoPreview').src = e.target.result;
                 document.getElementById('cotFotoNombre').textContent = file.name;
                 document.getElementById('cotFotoPreviewWrap').classList.remove('hidden');
@@ -440,11 +507,116 @@
 
         function quitarFoto() {
             fotoBase64Actual = null;
+            fotoUrlEnEdicion = null;
             document.getElementById('cotFotoFile').value = '';
             document.getElementById('cotFotoPreviewWrap').classList.add('hidden');
         }
 
+        // ---------- Control de traslapos de vehículo ----------
+        function hhmmAMinutos(t) {
+            if (!t) return null;
+            const partes = t.split(':').map(Number);
+            if (partes.length < 2 || isNaN(partes[0]) || isNaN(partes[1])) return null;
+            return partes[0] * 60 + partes[1];
+        }
+
+        // Devuelve la cotización en conflicto (o null) si el vehículo ya tiene un servicio
+        // Programado/En Ejecución que se cruza en fecha y horario con el nuevo rango.
+        function buscarConflictoVehiculo(vehiculo, fecha, horaInicio, horaFin, idExcluir) {
+            if (!vehiculo || !fecha || !horaInicio || !horaFin) return null;
+            const nuevoInicio = hhmmAMinutos(horaInicio);
+            const nuevoFin = hhmmAMinutos(horaFin);
+            if (nuevoInicio === null || nuevoFin === null || nuevoInicio >= nuevoFin) return null;
+
+            for (const cot of cotizacionesCache) {
+                if (idExcluir && cot.id_cotizacion === idExcluir) continue;
+                if (cot.vehiculo_asignado !== vehiculo) continue;
+                if (cot.fecha_programada !== fecha) continue;
+                if (!ESTADOS_OCUPAN_VEHICULO.includes(cot.estado)) continue;
+
+                const existInicio = hhmmAMinutos(cot.hora_inicio);
+                const existFin = hhmmAMinutos(cot.hora_fin);
+                if (existInicio === null || existFin === null) continue;
+
+                if (nuevoInicio < existFin && existInicio < nuevoFin) {
+                    return cot; // hay cruce de horario
+                }
+            }
+            return null;
+        }
+
+
         // ---------- Carga de datos ----------
+        // ---------- Calendario / Programación de servicios ----------
+        function renderizarCalendario() {
+            const cont = document.getElementById('calendarioContenedor');
+            const vacio = document.getElementById('calendarioVacio');
+            const filtro = document.getElementById('filtroVehiculoProgramacion');
+            if (!cont || !filtro) return; // la sección aún no está en el DOM en la primera carga
+
+            // Llena el filtro con los vehículos que realmente tienen servicios programados
+            const vehiculosConServicio = [...new Set(cotizacionesCache.filter(c => c.vehiculo_asignado).map(c => c.vehiculo_asignado))].sort();
+            const seleccionActual = filtro.value;
+            filtro.innerHTML = '<option value="">Todos los vehículos</option>' +
+                vehiculosConServicio.map(v => `<option value="${v}">${v}</option>`).join('');
+            filtro.value = vehiculosConServicio.includes(seleccionActual) ? seleccionActual : '';
+
+            let servicios = cotizacionesCache.filter(c => c.fecha_programada);
+            if (filtro.value) servicios = servicios.filter(c => c.vehiculo_asignado === filtro.value);
+
+            if (servicios.length === 0) {
+                cont.innerHTML = '';
+                vacio.classList.remove('hidden');
+                return;
+            }
+            vacio.classList.add('hidden');
+
+            // Agrupa por fecha, y dentro de cada fecha ordena por hora de inicio
+            const porFecha = {};
+            servicios.forEach(s => {
+                if (!porFecha[s.fecha_programada]) porFecha[s.fecha_programada] = [];
+                porFecha[s.fecha_programada].push(s);
+            });
+            const fechasOrdenadas = Object.keys(porFecha).sort();
+
+            const coloresEstado = {
+                'En Cotización': 'bg-slate-100 text-slate-600',
+                'Programado': 'bg-blue-50 text-blue-700',
+                'En Ejecución': 'bg-amber-50 text-amber-700',
+                'Completado': 'bg-emerald-50 text-emerald-700',
+                'Rechazada': 'bg-red-50 text-red-700'
+            };
+
+            cont.innerHTML = fechasOrdenadas.map(fecha => {
+                const items = porFecha[fecha].slice().sort((a, b) => (a.hora_inicio || '').localeCompare(b.hora_inicio || ''));
+                const fechaLegible = new Date(fecha + 'T00:00:00').toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const filas = items.map(s => {
+                    const clase = coloresEstado[s.estado] || 'bg-purple-50 text-purple-700';
+                    const horario = (s.hora_inicio && s.hora_fin) ? `${s.hora_inicio} - ${s.hora_fin}` : (s.hora_inicio || s.hora_fin || 'Sin horario');
+                    return `<div class="flex items-center justify-between gap-3 py-2 px-3 rounded-lg hover:bg-slate-50 border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-xs text-slate-400 w-20">${horario}</span>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">${s.cliente || ''} <span class="text-slate-400 font-normal">— ${s.id_cotizacion || ''}</span></p>
+                                <p class="text-xs text-slate-500">${s.descripcion || ''}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full"><i class="fa-solid fa-truck mr-1"></i>${s.vehiculo_asignado || 'Sin vehículo'}</span>
+                            <span class="${clase} text-xs px-2 py-1 rounded-full font-medium">${s.estado || ''}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                return `<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-100">
+                        <h3 class="text-sm font-bold text-indigo-800 capitalize"><i class="fa-solid fa-calendar-day mr-2"></i>${fechaLegible}</h3>
+                    </div>
+                    <div class="p-2 space-y-1">${filas}</div>
+                </div>`;
+            }).join('');
+        }
+
         function cargarDatos() {
             // Clientes
             fetch(`${WEB_APP_URL}?action=clientes`).then(res => res.json()).then(data => {
@@ -478,12 +650,20 @@
                 let selectFacCot = document.getElementById('facCot');
                 tbody.innerHTML = "";
                 selectFacCot.innerHTML = '<option value="">Selecciona una cotización...</option>';
+                const coloresEstado = {
+                    'En Cotización': 'bg-slate-100 text-slate-600',
+                    'Programado': 'bg-blue-50 text-blue-700',
+                    'En Ejecución': 'bg-amber-50 text-amber-700',
+                    'Completado': 'bg-emerald-50 text-emerald-700',
+                    'Rechazada': 'bg-red-50 text-red-700'
+                };
                 data.forEach(cot => {
                     const facturado = (cot.facturado === 'Sí' || cot.facturado === 'Si');
                     const badgeFacturado = facturado
                         ? `<span class="bg-emerald-50 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">Sí</span>`
                         : `<span class="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-full font-medium">No</span>`;
                     const horario = (cot.hora_inicio && cot.hora_fin) ? `${cot.hora_inicio} - ${cot.hora_fin}` : (cot.hora_inicio || cot.hora_fin || '-');
+                    const claseEstado = coloresEstado[cot.estado] || 'bg-purple-50 text-purple-700';
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-mono font-bold text-purple-600">${cot.id_cotizacion || ''}</td>
                         <td class="p-3 font-semibold">${cot.cliente || ''}</td>
@@ -495,14 +675,17 @@
                         <td class="p-3">${cot.fecha_programada || '-'}</td>
                         <td class="p-3 text-emerald-700 font-mono">${cot.vehiculo_asignado || '-'}</td>
                         <td class="p-3">${horario}</td>
-                        <td class="p-3"><span class="bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span></td>
+                        <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span></td>
                         <td class="p-3">${badgeFacturado}</td>
+                        <td class="p-3"><button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button></td>
                     </tr>`;
 
-                    if (cot.estado === 'Aprobada') {
-                        selectFacCot.innerHTML += `<option value="${cot.id_cotizacion}">${cot.id_cotizacion} — ${cot.cliente}</option>`;
+                    if (cot.estado === 'Completado' || cot.estado === 'Programado') {
+                        selectFacCot.innerHTML += `<option value="${cot.id_cotizacion}">${cot.id_cotizacion} — ${cot.cliente} (${cot.estado})</option>`;
                     }
                 });
+
+                renderizarCalendario();
             });
 
             // Vehículos (100% desde la Google Sheet real)
@@ -584,6 +767,7 @@
                     return;
                 }
             } else if (tipo === 'cotizacion') {
+                data.accion = document.getElementById('cotModo').value; // 'crear' o 'editar'
                 data.id_cotizacion = document.getElementById('cotId').value || null;
                 data.cliente = document.getElementById('cotCliente').value;
                 data.descripcion = document.getElementById('cotDesc').value;
@@ -597,10 +781,28 @@
                 data.vehiculo_asignado = document.getElementById('cotVehiculoAsignado').value;
                 data.hora_inicio = document.getElementById('cotHoraInicio').value;
                 data.hora_fin = document.getElementById('cotHoraFin').value;
+
                 if (fotoBase64Actual) {
                     data.foto_base64 = fotoBase64Actual.base64;
                     data.foto_name = fotoBase64Actual.nombre;
                     data.foto_mime = fotoBase64Actual.mime;
+                } else if (fotoUrlEnEdicion) {
+                    data.foto_url = fotoUrlEnEdicion; // conserva la foto ya subida si no se eligió una nueva
+                }
+
+                // Control de traslapos: solo bloquea si el estado ocupa el vehículo
+                if (ESTADOS_OCUPAN_VEHICULO.includes(data.estado)) {
+                    const conflicto = buscarConflictoVehiculo(
+                        data.vehiculo_asignado, data.fecha_programada, data.hora_inicio, data.hora_fin,
+                        data.accion === 'editar' ? data.id_cotizacion : null
+                    );
+                    if (conflicto) {
+                        mostrarToast(
+                            `Conflicto de horario: el vehículo ${data.vehiculo_asignado} ya tiene el servicio ${conflicto.id_cotizacion} (${conflicto.cliente}) el ${conflicto.fecha_programada} de ${conflicto.hora_inicio} a ${conflicto.hora_fin}. Elige otro horario o vehículo.`,
+                            'error'
+                        );
+                        return;
+                    }
                 }
             } else if (tipo === 'vehiculo') {
                 data.modelo = document.getElementById('vehModelo').value;
@@ -634,7 +836,9 @@
                     mostrarToast(resp.advertencia, 'warning');
                 } else {
                     mostrarToast(
-                        tipo === 'cliente' && data.accion === 'editar' ? 'Cliente actualizado con éxito' : 'Registro guardado con éxito',
+                        (data.accion === 'editar' && tipo === 'cliente') ? 'Cliente actualizado con éxito' :
+                        (data.accion === 'editar' && tipo === 'cotizacion') ? 'Cotización actualizada con éxito' :
+                        'Registro guardado con éxito',
                         'success'
                     );
                 }
