@@ -82,8 +82,7 @@
         <!-- LOBBY -->
         <div id="secLobby" class="space-y-6">
             <div class="bg-gradient-to-r from-blue-900 to-slate-800 text-white p-8 rounded-2xl shadow-lg">
-                <h2 class="text-3xl font-bold mb-2">Panel de control operativo MEJ</h2>
-                <p class="text-blue-200 text-sm max-w-2xl">Administración integral del ciclo del servicio, alta automatizada de clientes con códigos correlativos, control de la flota vehicular real y facturación vinculada.</p>
+                <h2 class="text-3xl font-bold">Panel de control operativo MEJ</h2>
             </div>
 
             <!-- DASHBOARD DE ESTADO DE COTIZACIONES Y SERVICIOS (solo Admin/Supervisor) -->
@@ -479,6 +478,98 @@
         </div>
     </div>
 
+    <!-- MODAL DETALLE DE SERVICIO (Calendario / Programación) -->
+    <div id="modalDetalleServicio" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-xs font-mono text-purple-600 font-bold" id="detId"></p>
+                    <h3 class="text-lg font-bold text-slate-900" id="detCliente"></h3>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full font-medium" id="detEstadoBadge"></span>
+            </div>
+
+            <div class="space-y-3 text-sm">
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-location-dot text-red-500 w-5 mt-0.5"></i>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Ubicación / Planta</p>
+                        <p class="text-slate-800" id="detUbicacion"></p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-clipboard-list text-slate-500 w-5 mt-0.5"></i>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Descripción del servicio</p>
+                        <p class="text-slate-800" id="detDescripcion"></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-weight-hanging text-slate-500 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase">Peso aprox.</p>
+                            <p class="text-slate-800" id="detPeso"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-slate-500 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase">Tipo de material</p>
+                            <p class="text-slate-800" id="detMaterial"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-calendar-day text-slate-500 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase">Fecha</p>
+                            <p class="text-slate-800" id="detFecha"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-clock text-slate-500 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase">Horario</p>
+                            <p class="text-slate-800" id="detHorario"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-truck text-emerald-600 w-5 mt-0.5"></i>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Vehículo asignado</p>
+                        <p class="text-slate-800 font-mono" id="detVehiculo"></p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-user-group text-indigo-600 w-5 mt-0.5"></i>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Personal asignado</p>
+                        <p class="text-slate-800" id="detPersonal"></p>
+                    </div>
+                </div>
+                <div id="detObservacionesWrap" class="flex items-start gap-2 hidden">
+                    <i class="fa-solid fa-comment-dots text-amber-500 w-5 mt-0.5"></i>
+                    <div>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Observaciones</p>
+                        <p class="text-slate-800" id="detObservaciones"></p>
+                    </div>
+                </div>
+                <div id="detFotoWrap" class="hidden">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Foto de la carga/zona</p>
+                    <img id="detFoto" class="w-full rounded-lg border border-slate-200">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4 mt-2 border-t border-slate-100">
+                <button type="button" onclick="closeModal('modalDetalleServicio')" class="px-4 py-2 text-sm bg-slate-100 rounded-lg">Cerrar</button>
+                <button type="button" id="detBtnRegistrarEtapa" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg"><i class="fa-solid fa-route mr-1"></i>Registrar Etapa</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS DE LÓGICA -->
     <script>
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx9AhjvRP3XyFFzZwII4Chb7NKlvSyE-MCoBNaUUdcBR4j7-pHtq8U4lNfS9X7Zj5Ra/exec'; // Tu URL real
@@ -808,19 +899,90 @@
             return null;
         }
 
+        // Determina si el servicio le pertenece al usuario en sesión: Admin/Supervisor ven todo,
+        // un OPERADOR solo ve los servicios donde su nombre está en "conductor_asignado".
+        function servicioAsignadoAUsuarioActual(cot) {
+            if (!esOperadorActual()) return true;
+            if (!sesionActual || !cot.conductor_asignado) return false;
+            const nombres = cot.conductor_asignado.split(',').map(n => n.trim().toLowerCase());
+            return nombres.includes(String(sesionActual.nombre || '').trim().toLowerCase());
+        }
+
+        // ---------- Modal de detalle de servicio (Calendario) ----------
+        function mostrarDetalleServicio(idCotizacion) {
+            const cot = cotizacionesCache.find(c => c.id_cotizacion === idCotizacion);
+            if (!cot) { mostrarToast('No se encontró el detalle de ese servicio.', 'error'); return; }
+
+            const ESTILO_ESTADO_BADGE = {
+                'En Cotización': 'bg-amber-50 text-amber-700 border border-amber-200',
+                'Programado': 'bg-blue-50 text-blue-700 border border-blue-100',
+                'En Ejecución': 'bg-orange-50 text-orange-700 border border-orange-100',
+                'Completado': 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                'Rechazada': 'bg-red-50 text-red-700 border border-red-100'
+            };
+
+            document.getElementById('detId').textContent = cot.id_cotizacion || '';
+            document.getElementById('detCliente').textContent = cot.cliente || '';
+            document.getElementById('detEstadoBadge').textContent = cot.estado || '';
+            document.getElementById('detEstadoBadge').className = 'text-xs px-2 py-1 rounded-full font-medium ' + (ESTILO_ESTADO_BADGE[cot.estado] || 'bg-slate-100 text-slate-600');
+            document.getElementById('detUbicacion').textContent = cot.ubicacion || 'Sin ubicación registrada';
+            document.getElementById('detDescripcion').textContent = cot.descripcion || '-';
+            document.getElementById('detPeso').textContent = cot.peso_aprox ? `${cot.peso_aprox} TN` : '-';
+            document.getElementById('detMaterial').textContent = cot.tipo_material || '-';
+            document.getElementById('detFecha').textContent = cot.fecha_programada || 'Sin fecha';
+            document.getElementById('detHorario').textContent = (cot.hora_inicio && cot.hora_fin) ? `${cot.hora_inicio} – ${cot.hora_fin}` : (cot.hora_inicio || cot.hora_fin || 'Sin horario');
+            document.getElementById('detVehiculo').textContent = cot.vehiculo_asignado || 'Sin vehículo asignado';
+            document.getElementById('detPersonal').textContent = cot.conductor_asignado || 'Sin personal asignado';
+
+            const obsWrap = document.getElementById('detObservacionesWrap');
+            if (cot.observaciones) {
+                document.getElementById('detObservaciones').textContent = cot.observaciones;
+                obsWrap.classList.remove('hidden');
+            } else {
+                obsWrap.classList.add('hidden');
+            }
+
+            const fotoWrap = document.getElementById('detFotoWrap');
+            if (cot.foto_url) {
+                document.getElementById('detFoto').src = cot.foto_url;
+                fotoWrap.classList.remove('hidden');
+            } else {
+                fotoWrap.classList.add('hidden');
+            }
+
+            const btnEtapa = document.getElementById('detBtnRegistrarEtapa');
+            const puedeRegistrarEtapa = (cot.estado === 'Programado' || cot.estado === 'En Ejecución');
+            btnEtapa.classList.toggle('hidden', !puedeRegistrarEtapa);
+            btnEtapa.onclick = () => {
+                closeModal('modalDetalleServicio');
+                abrirModalBitacora();
+                setTimeout(() => {
+                    const select = document.getElementById('bitCotizacion');
+                    if (select.querySelector(`option[value="${idCotizacion}"]`)) {
+                        select.value = idCotizacion;
+                        autocompletarBitacora();
+                    }
+                }, 0);
+            };
+
+            openModal('modalDetalleServicio');
+        }
+
         function renderizarCalendario() {
             const cont = document.getElementById('calendarioContenedor');
             const vacio = document.getElementById('calendarioVacio');
             const filtro = document.getElementById('filtroVehiculoProgramacion');
             if (!cont || !filtro) return;
 
-            const vehiculosConServicio = [...new Set(cotizacionesCache.filter(c => c.vehiculo_asignado).map(c => c.vehiculo_asignado))].sort();
+            const serviciosPropios = cotizacionesCache.filter(servicioAsignadoAUsuarioActual);
+
+            const vehiculosConServicio = [...new Set(serviciosPropios.filter(c => c.vehiculo_asignado).map(c => c.vehiculo_asignado))].sort();
             const seleccionActual = filtro.value;
             filtro.innerHTML = '<option value="">Todos los vehículos</option>' +
                 vehiculosConServicio.map(v => `<option value="${v}">${v}</option>`).join('');
             filtro.value = vehiculosConServicio.includes(seleccionActual) ? seleccionActual : '';
 
-            let servicios = cotizacionesCache.filter(c => c.fecha_programada);
+            let servicios = serviciosPropios.filter(c => c.fecha_programada);
             if (filtro.value) servicios = servicios.filter(c => c.vehiculo_asignado === filtro.value);
 
             if (servicios.length === 0) {
@@ -859,7 +1021,7 @@
                         ? `<span class="text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Tentativo</span>`
                         : '';
 
-                    return `<div class="flex items-stretch gap-3 rounded-lg border border-slate-200 hover:shadow-sm transition overflow-hidden">
+                    return `<div onclick="mostrarDetalleServicio('${s.id_cotizacion}')" class="flex items-stretch gap-3 rounded-lg border border-slate-200 hover:shadow-md hover:border-indigo-300 transition overflow-hidden cursor-pointer">
                         <div class="${estilo.barra} w-1.5 shrink-0"></div>
                         <div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2.5 pr-3">
                             <div class="flex items-center gap-3 min-w-0">
@@ -947,10 +1109,10 @@
                 if (selectPersonal) {
                     const seleccionPrevia = Array.from(selectPersonal.selectedOptions).map(o => o.value);
                     selectPersonal.innerHTML = '';
-                    data.filter(u => String(u.estado || '').toLowerCase() === 'activo').forEach(u => {
+                    data.filter(u => String(u.estado || '').toLowerCase() === 'activo' && String(u.rol || '').toUpperCase() === 'OPERADOR').forEach(u => {
                         const opt = document.createElement('option');
                         opt.value = u.nombre;
-                        opt.textContent = `${u.nombre} (${u.rol || ''})`;
+                        opt.textContent = u.nombre;
                         if (seleccionPrevia.includes(u.nombre)) opt.selected = true;
                         selectPersonal.appendChild(opt);
                     });
@@ -1023,6 +1185,7 @@
 
                 renderizarCalendario();
                 renderizarDashboard();
+                renderizarTablaBitacora();
             });
 
             fetch(`${WEB_APP_URL}?action=vehiculos`).then(res => res.json()).then(data => {
@@ -1063,22 +1226,36 @@
 
             fetch(`${WEB_APP_URL}?action=bitacora`).then(res => res.json()).then(data => {
                 bitacoraCache = data;
-                let tbody = document.getElementById('tableBitacora');
-                if (!tbody) return;
-                tbody.innerHTML = "";
-                const ordenados = data.slice().sort((a, b) => String(b.fecha_hora || '').localeCompare(String(a.fecha_hora || '')));
-                ordenados.forEach(b => {
-                    const usuario = usuariosCache.find(u => u.id_usuario === b.id_usuario);
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50">
-                        <td class="p-3 pl-4 font-mono font-bold text-purple-600">${b.id_cotizacion || ''}</td>
-                        <td class="p-3 font-mono">${b.placa_vehiculo || ''}</td>
-                        <td class="p-3"><span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">${b.etapa || ''}</span></td>
-                        <td class="p-3 text-slate-500">${b.fecha_hora || ''}</td>
-                        <td class="p-3">${b.km_lectura || ''}</td>
-                        <td class="p-3">${usuario ? usuario.nombre : (b.id_usuario || '')}</td>
-                        <td class="p-3 text-slate-500">${b.observaciones || ''}</td>
-                    </tr>`;
-                });
+                renderizarTablaBitacora();
+            });
+        }
+
+        // Se llama tanto al terminar de cargar Bitácora como al terminar de cargar Cotizaciones,
+        // para evitar que el filtro por operador se aplique antes de tener ambos datasets listos.
+        function renderizarTablaBitacora() {
+            let tbody = document.getElementById('tableBitacora');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            // Un OPERADOR solo ve las etapas de los servicios donde su nombre está asignado
+            let registros = bitacoraCache;
+            if (esOperadorActual()) {
+                const idsPropios = new Set(cotizacionesCache.filter(servicioAsignadoAUsuarioActual).map(c => c.id_cotizacion));
+                registros = bitacoraCache.filter(b => idsPropios.has(b.id_cotizacion));
+            }
+
+            const ordenados = registros.slice().sort((a, b) => String(b.fecha_hora || '').localeCompare(String(a.fecha_hora || '')));
+            ordenados.forEach(b => {
+                const usuario = usuariosCache.find(u => u.id_usuario === b.id_usuario);
+                tbody.innerHTML += `<tr class="hover:bg-slate-50">
+                    <td class="p-3 pl-4 font-mono font-bold text-purple-600">${b.id_cotizacion || ''}</td>
+                    <td class="p-3 font-mono">${b.placa_vehiculo || ''}</td>
+                    <td class="p-3"><span class="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">${b.etapa || ''}</span></td>
+                    <td class="p-3 text-slate-500">${b.fecha_hora || ''}</td>
+                    <td class="p-3">${b.km_lectura || ''}</td>
+                    <td class="p-3">${usuario ? usuario.nombre : (b.id_usuario || '')}</td>
+                    <td class="p-3 text-slate-500">${b.observaciones || ''}</td>
+                </tr>`;
             });
         }
 
@@ -1093,7 +1270,7 @@
 
         function abrirModalBitacora() {
             const select = document.getElementById('bitCotizacion');
-            const disponibles = cotizacionesCache.filter(c => c.estado === 'Programado' || c.estado === 'En Ejecución');
+            const disponibles = cotizacionesCache.filter(c => (c.estado === 'Programado' || c.estado === 'En Ejecución') && servicioAsignadoAUsuarioActual(c));
             select.innerHTML = '<option value="">Selecciona un servicio...</option>' +
                 disponibles.map(c => `<option value="${c.id_cotizacion}">${c.id_cotizacion} — ${c.cliente} (${c.estado})</option>`).join('');
 
