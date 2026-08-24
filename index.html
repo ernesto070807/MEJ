@@ -86,6 +86,34 @@
                 <p class="text-blue-200 text-sm max-w-2xl">Administración integral del ciclo del servicio, alta automatizada de clientes con códigos correlativos, control de la flota vehicular real y facturación vinculada.</p>
             </div>
 
+            <!-- DASHBOARD DE ESTADO DE COTIZACIONES Y SERVICIOS (solo Admin/Supervisor) -->
+            <div id="dashboardKPIs" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide"><i class="fa-solid fa-chart-simple mr-2 text-slate-400"></i>Estado general de la carga operativa</h3>
+                    <span class="text-xs text-slate-400">Actualizado en tiempo real</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                        <p class="text-3xl font-bold text-amber-700" id="kpiEnCotizacion">0</p>
+                        <p class="text-xs font-semibold text-amber-700 uppercase mt-1">En Cotización</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                        <p class="text-3xl font-bold text-blue-700" id="kpiProgramado">0</p>
+                        <p class="text-xs font-semibold text-blue-700 uppercase mt-1">Programados</p>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                        <p class="text-3xl font-bold text-orange-700" id="kpiEnEjecucion">0</p>
+                        <p class="text-xs font-semibold text-orange-700 uppercase mt-1">En Ejecución</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                        <p class="text-3xl font-bold text-emerald-700" id="kpiCompletado">0</p>
+                        <p class="text-xs font-semibold text-emerald-700 uppercase mt-1">Completados</p>
+                    </div>
+                </div>
+                <div class="w-full h-4 rounded-full overflow-hidden flex bg-slate-100" id="dashboardBarra"></div>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mt-2" id="dashboardLeyenda"></div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 <div onclick="switchTab('clientes')" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-500 cursor-pointer transition group">
                     <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition"><i class="fa-solid fa-users"></i></div>
@@ -584,7 +612,21 @@
             switchTab(esOperador ? 'programacion' : 'lobby');
         }
 
+        // Pestañas a las que un OPERADOR tiene acceso. Todo lo demás queda bloqueado
+        // sin importar cómo se dispare el cambio de pestaña (clic, código, consola).
+        const TABS_PERMITIDAS_OPERADOR = ['programacion', 'bitacora'];
+
+        function esOperadorActual() {
+            return sesionActual && String(sesionActual.rol || '').toUpperCase() === 'OPERADOR';
+        }
+
         function switchTab(tab) {
+            // Guardián de rol: si es OPERADOR y pide una pestaña no permitida, se le
+            // redirige silenciosamente a Programación en vez de abrir el módulo restringido.
+            if (esOperadorActual() && !TABS_PERMITIDAS_OPERADOR.includes(tab)) {
+                tab = 'programacion';
+            }
+
             ['Lobby', 'Clientes', 'Cotizaciones', 'Programacion', 'Vehiculos', 'Facturacion', 'Bitacora'].forEach(t => {
                 document.getElementById('sec' + t).classList.add('hidden');
                 let nav = document.getElementById('nav' + t);
@@ -595,7 +637,7 @@
             if (activeNav) activeNav.className = "px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700";
 
             const btnVolver = document.getElementById('btnVolverLobby');
-            if (tab === 'lobby') btnVolver.classList.add('hidden');
+            if (tab === 'lobby' || esOperadorActual()) btnVolver.classList.add('hidden');
             else btnVolver.classList.remove('hidden');
         }
 
@@ -852,6 +894,52 @@
             }).join('');
         }
 
+        // ---------- Dashboard de KPIs (Lobby, solo Admin/Supervisor) ----------
+        function renderizarDashboard() {
+            const cont = document.getElementById('dashboardKPIs');
+            if (!cont) return;
+
+            const ESTADOS_KPI = ['En Cotización', 'Programado', 'En Ejecución', 'Completado'];
+            const COLORES_BARRA = {
+                'En Cotización': 'bg-amber-400',
+                'Programado': 'bg-blue-500',
+                'En Ejecución': 'bg-orange-500',
+                'Completado': 'bg-emerald-500',
+                'Rechazada': 'bg-red-400'
+            };
+
+            const conteos = {};
+            ESTADOS_KPI.concat('Rechazada').forEach(e => conteos[e] = 0);
+            cotizacionesCache.forEach(c => {
+                if (conteos.hasOwnProperty(c.estado)) conteos[c.estado]++;
+            });
+
+            document.getElementById('kpiEnCotizacion').textContent = conteos['En Cotización'];
+            document.getElementById('kpiProgramado').textContent = conteos['Programado'];
+            document.getElementById('kpiEnEjecucion').textContent = conteos['En Ejecución'];
+            document.getElementById('kpiCompletado').textContent = conteos['Completado'];
+
+            const total = Object.values(conteos).reduce((a, b) => a + b, 0);
+            const barra = document.getElementById('dashboardBarra');
+            const leyenda = document.getElementById('dashboardLeyenda');
+
+            if (total === 0) {
+                barra.innerHTML = `<div class="w-full bg-slate-200"></div>`;
+                leyenda.innerHTML = `<span class="text-slate-400">Aún no hay cotizaciones registradas.</span>`;
+                return;
+            }
+
+            barra.innerHTML = Object.keys(conteos)
+                .filter(e => conteos[e] > 0)
+                .map(e => `<div class="${COLORES_BARRA[e]}" style="width:${(conteos[e] / total * 100).toFixed(1)}%" title="${e}: ${conteos[e]}"></div>`)
+                .join('');
+
+            leyenda.innerHTML = Object.keys(conteos)
+                .filter(e => conteos[e] > 0)
+                .map(e => `<span class="flex items-center gap-1.5 text-slate-500"><span class="w-2.5 h-2.5 rounded-full ${COLORES_BARRA[e]} inline-block"></span>${e}: <strong class="text-slate-700">${conteos[e]}</strong></span>`)
+                .join('') + `<span class="text-slate-400 ml-auto">Total: ${total}</span>`;
+        }
+
         function cargarDatos() {
             fetch(`${WEB_APP_URL}?action=usuarios`).then(res => res.json()).then(data => {
                 usuariosCache = data;
@@ -934,6 +1022,7 @@
                 });
 
                 renderizarCalendario();
+                renderizarDashboard();
             });
 
             fetch(`${WEB_APP_URL}?action=vehiculos`).then(res => res.json()).then(data => {
