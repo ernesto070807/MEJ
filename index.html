@@ -346,7 +346,7 @@
 
     <!-- SCRIPTS -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUQ-1ce9pEMPW6AsoYTuyL29ZuO0bISI3Os7eV3FrDSuneGiByZiyo44z8GccjHBkK/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz1hkKndB0nzuzRD5pc5gvwaNJNq_Hp6CEJHW1ujLZywa9Zs3tKWE8odVJjYfy8Lz77/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
@@ -354,6 +354,47 @@
         let fotoBase64Actual = null; // { base64, nombre, mime }
         let fotoUrlEnEdicion = null; // conserva la foto existente al editar si no se sube una nueva
         const ESTADOS_OCUPAN_VEHICULO = ['Programado', 'En Ejecución'];
+
+        // ---------- Saneamiento de fechas/horas ----------
+        // Red de seguridad en el frontend: aunque el backend ya formatea las fechas/horas
+        // antes de enviarlas, esto limpia cualquier valor ISO largo (ej. "2026-08-26T05:00:00.000Z"
+        // o "1899-12-30T14:08:36.000Z") que pudiera llegar por cualquier otra vía.
+        function formatearFecha(valor) {
+            if (!valor) return '';
+            const str = String(valor).trim();
+            if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.substring(0, 10);
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            return str;
+        }
+
+        function formatearHora(valor) {
+            if (!valor) return '';
+            const str = String(valor).trim();
+            if (/^\d{2}:\d{2}/.test(str)) return str.substring(0, 5);
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                const hh = String(d.getUTCHours()).padStart(2, '0');
+                const mi = String(d.getUTCMinutes()).padStart(2, '0');
+                return `${hh}:${mi}`;
+            }
+            return str;
+        }
+
+        // Limpia los 3 campos de programación de un objeto cotización (in-place friendly: retorna copia)
+        function sanearProgramacionCotizacion(cot) {
+            return {
+                ...cot,
+                fecha_programada: formatearFecha(cot.fecha_programada),
+                hora_inicio: formatearHora(cot.hora_inicio),
+                hora_fin: formatearHora(cot.hora_fin)
+            };
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
             cargarDatos();
@@ -571,6 +612,16 @@
             }
             vacio.classList.add('hidden');
 
+            // Config visual por estado: color de acento, fondo del pill y si es "tentativo"
+            const ESTILO_ESTADO = {
+                'En Cotización': { pill: 'bg-amber-100 text-amber-700 border border-amber-200', barra: 'bg-amber-300', tentativo: true },
+                'Programado':    { pill: 'bg-blue-50 text-blue-700 border border-blue-100',      barra: 'bg-blue-500',   tentativo: false },
+                'En Ejecución':  { pill: 'bg-orange-50 text-orange-700 border border-orange-100', barra: 'bg-orange-500', tentativo: false },
+                'Completado':    { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-100', barra: 'bg-emerald-500', tentativo: false },
+                'Rechazada':     { pill: 'bg-red-50 text-red-700 border border-red-100',         barra: 'bg-red-400',    tentativo: false }
+            };
+            const estiloDefault = { pill: 'bg-slate-100 text-slate-600 border border-slate-200', barra: 'bg-slate-300', tentativo: false };
+
             // Agrupa por fecha, y dentro de cada fecha ordena por hora de inicio
             const porFecha = {};
             servicios.forEach(s => {
@@ -578,41 +629,52 @@
                 porFecha[s.fecha_programada].push(s);
             });
             const fechasOrdenadas = Object.keys(porFecha).sort();
-
-            const coloresEstado = {
-                'En Cotización': 'bg-slate-100 text-slate-600',
-                'Programado': 'bg-blue-50 text-blue-700',
-                'En Ejecución': 'bg-amber-50 text-amber-700',
-                'Completado': 'bg-emerald-50 text-emerald-700',
-                'Rechazada': 'bg-red-50 text-red-700'
-            };
+            const hoyStr = new Date().toISOString().substring(0, 10);
 
             cont.innerHTML = fechasOrdenadas.map(fecha => {
                 const items = porFecha[fecha].slice().sort((a, b) => (a.hora_inicio || '').localeCompare(b.hora_inicio || ''));
                 const fechaLegible = new Date(fecha + 'T00:00:00').toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const esHoy = fecha === hoyStr;
+
                 const filas = items.map(s => {
-                    const clase = coloresEstado[s.estado] || 'bg-purple-50 text-purple-700';
-                    const horario = (s.hora_inicio && s.hora_fin) ? `${s.hora_inicio} - ${s.hora_fin}` : (s.hora_inicio || s.hora_fin || 'Sin horario');
-                    return `<div class="flex items-center justify-between gap-3 py-2 px-3 rounded-lg hover:bg-slate-50 border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <span class="font-mono text-xs text-slate-400 w-20">${horario}</span>
-                            <div>
-                                <p class="text-sm font-semibold text-slate-800">${s.cliente || ''} <span class="text-slate-400 font-normal">— ${s.id_cotizacion || ''}</span></p>
-                                <p class="text-xs text-slate-500">${s.descripcion || ''}</p>
+                    const estilo = ESTILO_ESTADO[s.estado] || estiloDefault;
+                    const horario = (s.hora_inicio && s.hora_fin) ? `${s.hora_inicio} – ${s.hora_fin}` : (s.hora_inicio || s.hora_fin || 'Sin horario');
+                    const etiquetaTentativo = estilo.tentativo
+                        ? `<span class="text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Tentativo</span>`
+                        : '';
+                    const opacidad = estilo.tentativo ? 'opacity-90' : '';
+                    const bordeEstilo = estilo.tentativo ? 'border-dashed' : 'border-solid';
+
+                    return `<div class="flex items-stretch gap-3 rounded-lg border ${bordeEstilo} border-slate-200 ${opacidad} hover:shadow-sm transition overflow-hidden">
+                        <div class="${estilo.barra} w-1.5 shrink-0"></div>
+                        <div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2.5 pr-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="text-center shrink-0 w-20">
+                                    <p class="font-mono text-xs font-bold text-slate-700 leading-tight">${horario}</p>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-slate-800 truncate">${s.cliente || ''} <span class="text-slate-400 font-normal">— ${s.id_cotizacion || ''}</span></p>
+                                    <p class="text-xs text-slate-500 truncate">${s.descripcion || ''}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full"><i class="fa-solid fa-truck mr-1"></i>${s.vehiculo_asignado || 'Sin vehículo'}</span>
-                            <span class="${clase} text-xs px-2 py-1 rounded-full font-medium">${s.estado || ''}</span>
+                            <div class="flex items-center gap-2 flex-wrap shrink-0">
+                                ${etiquetaTentativo}
+                                <span class="text-xs font-mono text-slate-600 bg-slate-50 border border-slate-200 px-2 py-1 rounded-full"><i class="fa-solid fa-truck mr-1 text-slate-400"></i>${s.vehiculo_asignado || 'Sin vehículo'}</span>
+                                <span class="${estilo.pill} text-xs px-2 py-1 rounded-full font-medium">${s.estado || ''}</span>
+                            </div>
                         </div>
                     </div>`;
                 }).join('');
 
-                return `<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-100">
-                        <h3 class="text-sm font-bold text-indigo-800 capitalize"><i class="fa-solid fa-calendar-day mr-2"></i>${fechaLegible}</h3>
+                return `<div class="bg-white rounded-xl shadow-sm border ${esHoy ? 'border-indigo-300 ring-1 ring-indigo-100' : 'border-slate-200'} overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2.5 border-b ${esHoy ? 'bg-indigo-600' : 'bg-slate-800'}">
+                        <h3 class="text-sm font-bold text-white capitalize flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-day"></i>${fechaLegible}
+                            ${esHoy ? '<span class="text-[10px] font-bold uppercase bg-white/20 px-2 py-0.5 rounded-full">Hoy</span>' : ''}
+                        </h3>
+                        <span class="text-xs text-white/80">${items.length} servicio${items.length === 1 ? '' : 's'}</span>
                     </div>
-                    <div class="p-2 space-y-1">${filas}</div>
+                    <div class="p-2.5 space-y-2">${filas}</div>
                 </div>`;
             }).join('');
         }
@@ -645,25 +707,26 @@
 
             // Cotizaciones
             fetch(`${WEB_APP_URL}?action=cotizaciones`).then(res => res.json()).then(data => {
-                cotizacionesCache = data;
+                cotizacionesCache = data.map(sanearProgramacionCotizacion);
                 let tbody = document.getElementById('tableCotizaciones');
                 let selectFacCot = document.getElementById('facCot');
                 tbody.innerHTML = "";
                 selectFacCot.innerHTML = '<option value="">Selecciona una cotización...</option>';
                 const coloresEstado = {
-                    'En Cotización': 'bg-slate-100 text-slate-600',
-                    'Programado': 'bg-blue-50 text-blue-700',
-                    'En Ejecución': 'bg-amber-50 text-amber-700',
-                    'Completado': 'bg-emerald-50 text-emerald-700',
-                    'Rechazada': 'bg-red-50 text-red-700'
+                    'En Cotización': 'bg-amber-50 text-amber-700 border border-amber-200',
+                    'Programado': 'bg-blue-50 text-blue-700 border border-blue-100',
+                    'En Ejecución': 'bg-orange-50 text-orange-700 border border-orange-100',
+                    'Completado': 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                    'Rechazada': 'bg-red-50 text-red-700 border border-red-100'
                 };
-                data.forEach(cot => {
+                cotizacionesCache.forEach(cot => {
                     const facturado = (cot.facturado === 'Sí' || cot.facturado === 'Si');
                     const badgeFacturado = facturado
                         ? `<span class="bg-emerald-50 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">Sí</span>`
                         : `<span class="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-full font-medium">No</span>`;
                     const horario = (cot.hora_inicio && cot.hora_fin) ? `${cot.hora_inicio} - ${cot.hora_fin}` : (cot.hora_inicio || cot.hora_fin || '-');
-                    const claseEstado = coloresEstado[cot.estado] || 'bg-purple-50 text-purple-700';
+                    const claseEstado = coloresEstado[cot.estado] || 'bg-purple-50 text-purple-700 border border-purple-100';
+                    const etiquetaTentativa = cot.estado === 'En Cotización' ? ` <span class="text-[9px] font-bold uppercase text-amber-600">(Tentativo)</span>` : '';
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-mono font-bold text-purple-600">${cot.id_cotizacion || ''}</td>
                         <td class="p-3 font-semibold">${cot.cliente || ''}</td>
@@ -675,7 +738,7 @@
                         <td class="p-3">${cot.fecha_programada || '-'}</td>
                         <td class="p-3 text-emerald-700 font-mono">${cot.vehiculo_asignado || '-'}</td>
                         <td class="p-3">${horario}</td>
-                        <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span></td>
+                        <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span>${etiquetaTentativa}</td>
                         <td class="p-3">${badgeFacturado}</td>
                         <td class="p-3"><button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button></td>
                     </tr>`;
@@ -729,7 +792,7 @@
                         <td class="p-3 text-purple-600">${f.cotizacion || ''}</td>
                         <td class="p-3 font-semibold">${f.cliente || ''}</td>
                         <td class="p-3 font-mono">S/. ${f.monto || '0.00'}</td>
-                        <td class="p-3">${f.fecha_pago || '-'}</td>
+                        <td class="p-3">${formatearFecha(f.fecha_pago) || '-'}</td>
                         <td class="p-3"><span class="${clase} text-xs px-2 py-1 rounded-full font-medium">${f.estado || ''}</span></td>
                     </tr>`;
                 });
