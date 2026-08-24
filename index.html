@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes y Procesos - MEJ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-900 text-white font-bold px-3 py-2 rounded-lg text-lg tracking-wider">MEJ</div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900">Control Operativo y Clientes</h1>
+                    <p class="text-xs text-slate-500">MEJ Solutions & Services S.A.C.</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="switchTab('clientes')" id="btnTabClientes" class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white transition">
+                    <i class="fa-solid fa-users mr-1"></i> Clientes
+                </button>
+                <button onclick="switchTab('servicios')" id="btnTabServicios" class="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+                    <i class="fa-solid fa-diagram-project mr-1"></i> Flujo de Servicios
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- SECCIÓN CLIENTES -->
+        <div id="sectionClientes" class="space-y-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Directorio de Clientes</h2>
+                    <p class="text-xs text-slate-500">Punto de partida para la solicitud de servicios e información indispensable.</p>
+                </div>
+                <button onclick="openModalCliente()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition flex items-center space-x-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Nuevo Cliente</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                            <th class="p-3 pl-4">ID</th>
+                            <th class="p-3">Razón Social</th>
+                            <th class="p-3">RUC</th>
+                            <th class="p-3">Contacto Principal</th>
+                            <th class="p-3">Correo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableClientesBody" class="divide-y divide-slate-200 text-sm">
+                        <!-- Cargado dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECCIÓN SERVICIOS (FLUJO BPMN) -->
+        <div id="sectionServicios" class="space-y-4 hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Seguimiento de Flujo de Servicios</h2>
+                    <p class="text-xs text-slate-500">Control de etapas (Ventas, Operaciones, Finanzas, Documentaria).</p>
+                </div>
+                <button onclick="openModalServicio()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Registrar Actividad / Servicio</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                            <th class="p-3 pl-4">Código</th>
+                            <th class="p-3">Cliente</th>
+                            <th class="p-3">Actividad BPMN</th>
+                            <th class="p-3">Área</th>
+                            <th class="p-3">Responsable</th>
+                            <th class="p-3">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableServiciosBody" class="divide-y divide-slate-200 text-sm">
+                        <!-- Cargado dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Nuevo Cliente -->
+    <div id="modalCliente" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 class="text-lg font-bold text-slate-900 mb-4">Registrar Nuevo Cliente</h3>
+            <form onsubmit="guardarCliente(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">ID Cliente</label>
+                    <input type="text" id="cliId" required value="CLI-003" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Razón Social</label>
+                    <input type="text" id="cliRazon" required placeholder="Ej. Minera S.A." class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">RUC</label>
+                    <input type="text" id="cliRuc" required placeholder="20123456789" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contacto Principal</label>
+                    <input type="text" id="cliContacto" required placeholder="Nombre del responsable" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo Electrónico</label>
+                    <input type="email" id="cliCorreo" required placeholder="correo@empresa.com" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModalCliente()" class="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg">Cancelar</button>
+                    <button type="submit" id="btnCliSave" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Servicio -->
+    <div id="modalServicio" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 class="text-lg font-bold text-slate-900 mb-4">Iniciar Actividad del Servicio</h3>
+            <form onsubmit="guardarServicio(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Código del Servicio</label>
+                    <input type="text" id="srvCode" required value="MEJ-2025-01" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Seleccionar Cliente</label>
+                    <select id="srvCliente" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Actividad (Diagrama Bizagi)</label>
+                    <select id="srvActividad" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">
+                        <option value="A) Solicitar información indispensable">A) Solicitar información indispensable</option>
+                        <option value="B) Cotizar servicio y enviar cotización">B) Cotizar servicio y enviar cotización</option>
+                        <option value="C) Enviar programación de servicio">C) Enviar programación de servicio</option>
+                        <option value="D) Cargar y transportar el residuo">D) Cargar y transportar el residuo</option>
+                        <option value="E) Descargar en relleno sanitario">E) Descargar en relleno sanitario</option>
+                        <option value="F) Descargar en planta de valorización">F) Descargar en planta de valorización</option>
+                        <option value="G) Destrucción notarial">G) Destrucción notarial</option>
+                        <option value="H) Recibir documentación de residuos">H) Recibir documentación de residuos</option>
+                        <option value="I) Emitir y enviar documentación (Manifiestos)">I) Emitir y enviar documentación (Manifiestos)</option>
+                        <option value="J) Recibir conformidad y solicitar emisión">J) Recibir conformidad y solicitar emisión</option>
+                        <option value="K) Emitir y enviar factura al cliente">K) Emitir y enviar factura al cliente</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Área</label>
+                    <select id="srvArea" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">
+                        <option value="Gestión comercial">Gestión comercial</option>
+                        <option value="Operaciones">Operaciones</option>
+                        <option value="Gestión documentaria">Gestión documentaria</option>
+                        <option value="Finanzas">Finanzas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Responsable</label>
+                    <input type="text" id="srvResponsable" required placeholder="Persona a cargo" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Estado</label>
+                    <select id="srvEstado" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Completado">Completado</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModalServicio()" class="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg">Cancelar</button>
+                    <button type="submit" id="btnSrvSave" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">Guardar Servicio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts de lógica -->
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxftUQY5_S5PFi7wx8fgi3saKHVBwlUJAO3mnmloBW1UhmLTzuQfVMdsx_Z5zruXwHq/exec';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarClientes();
+            cargarServicios();
+        });
+
+        function switchTab(tab) {
+            const secCli = document.getElementById('sectionClientes');
+            const secSrv = document.getElementById('sectionServicios');
+            const btnCli = document.getElementById('btnTabClientes');
+            const btnSrv = document.getElementById('btnTabServicios');
+
+            if (tab === 'clientes') {
+                secCli.classList.remove('hidden');
+                secSrv.classList.add('hidden');
+                btnCli.className = "px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white transition";
+                btnSrv.className = "px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+            } else {
+                secCli.classList.add('hidden');
+                secSrv.classList.remove('hidden');
+                btnSrv.className = "px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white transition";
+                btnCli.className = "px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+            }
+        }
+
+        function cargarClientes() {
+            fetch(`${WEB_APP_URL}?action=clientes`)
+                .then(res => res.json())
+                .then(data => {
+                    let tbody = document.getElementById('tableClientesBody');
+                    let selectCli = document.getElementById('srvCliente');
+                    tbody.innerHTML = "";
+                    selectCli.innerHTML = "";
+
+                    data.forEach(cli => {
+                        let tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 transition";
+                        tr.innerHTML = `
+                            <td class="p-3 pl-4 font-medium text-blue-600">${cli.id_cliente || ''}</td>
+                            <td class="p-3 font-semibold text-slate-800">${cli.razon_social || ''}</td>
+                            <td class="p-3 text-slate-600">${cli.ruc || ''}</td>
+                            <td class="p-3">${cli.contacto || ''}</td>
+                            <td class="p-3 text-slate-500">${cli.correo || ''}</td>
+                        `;
+                        tbody.appendChild(tr);
+
+                        let opt = document.createElement('option');
+                        opt.value = cli.razon_social;
+                        opt.textContent = cli.razon_social + " (RUC: " + cli.ruc + ")";
+                        selectCli.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error("Error cargando clientes:", err));
+        }
+
+        function cargarServicios() {
+            fetch(WEB_APP_URL)
+                .then(res => res.json())
+                .then(data => {
+                    let tbody = document.getElementById('tableServiciosBody');
+                    tbody.innerHTML = "";
+
+                    data.forEach(srv => {
+                        let estado = srv.estado || "Pendiente";
+                        let badgeColor = "bg-amber-50 text-amber-700";
+                        if (estado === "En Proceso") badgeColor = "bg-blue-50 text-blue-700";
+                        if (estado === "Completado") badgeColor = "bg-emerald-50 text-emerald-700";
+
+                        let tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 transition";
+                        tr.innerHTML = `
+                            <td class="p-3 pl-4 font-medium text-blue-600">${srv.codigo || ''}</td>
+                            <td class="p-3 font-semibold text-slate-800">${srv.cliente || ''}</td>
+                            <td class="p-3 text-slate-600">${srv.actividad || ''}</td>
+                            <td class="p-3"><span class="bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded-md font-medium">${srv.area || ''}</span></td>
+                            <td class="p-3">${srv.responsable || ''}</td>
+                            <td class="p-3"><span class="${badgeColor} text-xs px-2 py-1 rounded-full font-medium">${estado}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => console.error("Error cargando servicios:", err));
+        }
+
+        function openModalCliente() { document.getElementById('modalCliente').classList.remove('hidden'); }
+        function closeModalCliente() { document.getElementById('modalCliente').classList.add('hidden'); }
+
+        function openModalServicio() { document.getElementById('modalServicio').classList.remove('hidden'); }
+        function closeModalServicio() { document.getElementById('modalServicio').classList.add('hidden'); }
+
+        function guardarCliente(e) {
+            e.preventDefault();
+            let btn = document.getElementById('btnCliSave');
+            btn.textContent = "Guardando...";
+            btn.disabled = true;
+
+            let data = {
+                tipo: "cliente",
+                id_cliente: document.getElementById('cliId').value,
+                razon_social: document.getElementById('cliRazon').value,
+                ruc: document.getElementById('cliRuc').value,
+                contacto: document.getElementById('cliContacto').value,
+                correo: document.getElementById('cliCorreo').value
+            };
+
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
+                .then(res => res.json())
+                .then(() => {
+                    closeModalCliente();
+                    btn.textContent = "Guardar Cliente";
+                    btn.disabled = false;
+                    cargarClientes();
+                })
+                .catch(err => {
+                    alert("Error al registrar cliente");
+                    btn.textContent = "Guardar Cliente";
+                    btn.disabled = false;
+                });
+        }
+
+        function guardarServicio(e) {
+            e.preventDefault();
+            let btn = document.getElementById('btnSrvSave');
+            btn.textContent = "Guardando...";
+            btn.disabled = true;
+
+            let data = {
+                tipo: "servicio",
+                codigo: document.getElementById('srvCode').value,
+                cliente: document.getElementById('srvCliente').value,
+                actividad: document.getElementById('srvActividad').value,
+                area: document.getElementById('srvArea').value,
+                responsable: document.getElementById('srvResponsable').value,
+                estado: document.getElementById('srvEstado').value
+            };
+
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
+                .then(res => res.json())
+                .then(() => {
+                    closeModalServicio();
+                    btn.textContent = "Guardar Servicio";
+                    btn.disabled = false;
+                    cargarServicios();
+                })
+                .catch(err => {
+                    alert("Error al registrar servicio");
+                    btn.textContent = "Guardar Servicio";
+                    btn.disabled = false;
+                });
+        }
+    </script>
+</body>
+</html>
