@@ -15,6 +15,35 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
 
+    <!-- PANTALLA DE LOGIN -->
+    <div id="loginOverlay" class="fixed inset-0 z-[100] bg-gradient-to-br from-blue-900 to-slate-800 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8">
+            <div class="flex flex-col items-center mb-6">
+                <div class="bg-blue-900 text-white font-bold px-4 py-2 rounded-lg text-xl tracking-wider mb-3">MEJ</div>
+                <h1 class="text-lg font-bold text-slate-900 text-center">Sistema de Control Operativo</h1>
+                <p class="text-xs text-slate-500 text-center">MEJ Solutions & Services S.A.C.</p>
+            </div>
+            <form onsubmit="iniciarSesion(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Correo</label>
+                    <input type="email" id="loginCorreo" required autocomplete="username" placeholder="correo@mej.com" class="w-full text-sm border rounded-lg px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
+                    <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••" class="w-full text-sm border rounded-lg px-3 py-2">
+                </div>
+                <p id="loginError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></p>
+                <button type="submit" id="btnLogin" class="w-full bg-blue-900 hover:bg-blue-800 text-white text-sm font-medium py-2.5 rounded-lg flex items-center justify-center gap-2">
+                    <span id="btnLoginTexto">Ingresar</span>
+                    <i id="btnLoginSpinner" class="fa-solid fa-circle-notch spinner hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DE LA APP (oculto hasta iniciar sesión) -->
+    <div id="appShell" class="hidden">
+
     <!-- Header -->
     <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -25,14 +54,24 @@
                     <p class="text-xs text-slate-500">MEJ Solutions & Services S.A.C.</p>
                 </div>
             </div>
-            <nav class="hidden md:flex space-x-1">
-                <button onclick="switchTab('lobby')" id="navLobby" class="px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700"><i class="fa-solid fa-house mr-1"></i> Lobby</button>
-                <button onclick="switchTab('clientes')" id="navClientes" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-users mr-1"></i> Clientes</button>
-                <button onclick="switchTab('cotizaciones')" id="navCotizaciones" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Cotizaciones</button>
-                <button onclick="switchTab('programacion')" id="navProgramacion" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-calendar-days mr-1"></i> Programación</button>
-                <button onclick="switchTab('vehiculos')" id="navVehiculos" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-truck mr-1"></i> Flota Real</button>
-                <button onclick="switchTab('facturacion')" id="navFacturacion" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-receipt mr-1"></i> Facturación</button>
-            </nav>
+            <div class="flex items-center gap-2">
+                <nav class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('lobby')" id="navLobby" class="px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700"><i class="fa-solid fa-house mr-1"></i> Lobby</button>
+                    <button onclick="switchTab('clientes')" id="navClientes" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-users mr-1"></i> Clientes</button>
+                    <button onclick="switchTab('cotizaciones')" id="navCotizaciones" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Cotizaciones</button>
+                    <button onclick="switchTab('programacion')" id="navProgramacion" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-calendar-days mr-1"></i> Programación</button>
+                    <button onclick="switchTab('vehiculos')" id="navVehiculos" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-truck mr-1"></i> Flota Real</button>
+                    <button onclick="switchTab('facturacion')" id="navFacturacion" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-receipt mr-1"></i> Facturación</button>
+                    <button onclick="switchTab('bitacora')" id="navBitacora" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-route mr-1"></i> Bitácora</button>
+                </nav>
+                <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+                    <div class="text-right hidden sm:block">
+                        <p id="sesionNombre" class="text-xs font-semibold text-slate-700 leading-tight"></p>
+                        <p id="sesionRol" class="text-[10px] text-slate-400 leading-tight"></p>
+                    </div>
+                    <button onclick="cerrarSesion()" title="Cerrar sesión" class="text-slate-500 hover:text-red-600 hover:bg-red-50 w-9 h-9 rounded-lg flex items-center justify-center transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -46,7 +85,7 @@
                 <p class="text-blue-200 text-sm max-w-2xl">Administración integral del ciclo del servicio, alta automatizada de clientes con códigos correlativos, control de la flota vehicular real y facturación vinculada.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 <div onclick="switchTab('clientes')" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-500 cursor-pointer transition group">
                     <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition"><i class="fa-solid fa-users"></i></div>
                     <h3 class="font-bold text-slate-900 text-lg">Clientes</h3>
@@ -71,6 +110,11 @@
                     <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-amber-600 group-hover:text-white transition"><i class="fa-solid fa-receipt"></i></div>
                     <h3 class="font-bold text-slate-900 text-lg">Facturación</h3>
                     <p class="text-xs text-slate-500 mt-1">Registra las facturas</p>
+                </div>
+                <div onclick="switchTab('bitacora')" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-600 cursor-pointer transition group">
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-700 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-indigo-700 group-hover:text-white transition"><i class="fa-solid fa-route"></i></div>
+                    <h3 class="font-bold text-slate-900 text-lg">Bitácora de Rutas</h3>
+                    <p class="text-xs text-slate-500 mt-1">Controla etapas y kilometraje</p>
                 </div>
             </div>
         </div>
@@ -97,7 +141,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Descripción</th><th class="p-3">Peso (TN)</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Estado</th><th class="p-3">Facturado</th><th class="p-3">Acción</th></tr></thead>
+                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Descripción</th><th class="p-3">Peso (TN)</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Personal</th><th class="p-3">Estado</th><th class="p-3">Facturado</th><th class="p-3">Acción</th></tr></thead>
                     <tbody id="tableCotizaciones" class="divide-y divide-slate-200 text-sm"></tbody>
                 </table>
             </div>
@@ -135,6 +179,23 @@
             </div>
         </div>
 
+        <!-- SECCIÓN BITÁCORA DE RUTAS -->
+        <div id="secBitacora" class="space-y-4 hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Bitácora de Rutas</h2>
+                    <p class="text-xs text-slate-500">Registro de etapas de cada servicio: salida de base, llegada a cliente, salida de cliente y retorno.</p>
+                </div>
+                <button onclick="abrirModalBitacora()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-route mr-1"></i> Registrar Etapa / KM</button>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">Cotización</th><th class="p-3">Placa</th><th class="p-3">Etapa</th><th class="p-3">Fecha y Hora</th><th class="p-3">KM</th><th class="p-3">Usuario</th><th class="p-3">Observaciones</th></tr></thead>
+                    <tbody id="tableBitacora" class="divide-y divide-slate-200 text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- SECCIÓN FACTURACIÓN -->
         <div id="secFacturacion" class="space-y-4 hidden">
             <div class="flex justify-between items-center">
@@ -153,6 +214,11 @@
         </div>
 
     </main>
+
+    <!-- BOTÓN FLOTANTE "REGISTRAR ETAPA / KM" (visible para OPERADOR) -->
+    <button id="btnRegistrarEtapaFlotante" onclick="abrirModalBitacora()" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-full shadow-lg flex items-center gap-2 text-sm font-semibold transition">
+        <i class="fa-solid fa-route"></i> Registrar Etapa / KM
+    </button>
 
     <!-- BOTÓN FLOTANTE "VOLVER AL LOBBY" (visible fuera del lobby) -->
     <button id="btnVolverLobby" onclick="switchTab('lobby')" class="hidden fixed bottom-6 right-6 z-40 bg-blue-900 hover:bg-blue-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl transition" title="Regresar al menú principal (Lobby)">
@@ -260,6 +326,11 @@
                             <input type="time" id="cotHoraFin" class="w-full text-sm border rounded-lg px-3 py-2">
                         </div>
                     </div>
+                    <div class="mt-2">
+                        <label class="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Personal asignado (conductor + auxiliares)</label>
+                        <select id="cotPersonal" multiple class="w-full text-sm border rounded-lg px-3 py-2 bg-white h-28"><!-- Dinámico: se llena desde la hoja Usuarios --></select>
+                        <p class="text-[10px] text-slate-400 mt-1">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varias personas.</p>
+                    </div>
                 </div>
 
                 <select id="cotEstado" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
@@ -344,16 +415,56 @@
         </div>
     </div>
 
+    <!-- MODAL BITÁCORA (Registrar Etapa / KM) -->
+    <div id="modalBitacora" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 class="text-lg font-bold mb-4"><i class="fa-solid fa-route mr-2 text-indigo-600"></i>Registrar Etapa / KM</h3>
+            <form onsubmit="guardarEtapaBitacora(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Servicio (Programado / En Ejecución)</label>
+                    <select id="bitCotizacion" required onchange="autocompletarBitacora()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white"><!-- Dinámico --></select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="bitPlaca" readonly placeholder="Placa" class="w-full text-sm border rounded-lg px-3 py-2 bg-slate-100 font-mono">
+                    <input type="text" id="bitCliente" readonly placeholder="Cliente" class="w-full text-sm border rounded-lg px-3 py-2 bg-slate-100">
+                </div>
+                <input type="text" id="bitPersonal" readonly placeholder="Personal asignado" class="w-full text-sm border rounded-lg px-3 py-2 bg-slate-100">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Etapa</label>
+                    <select id="bitEtapa" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
+                        <option value="Salida Base MEJ">1. Salida Base MEJ</option>
+                        <option value="Llegada a Cliente">2. Llegada a Cliente</option>
+                        <option value="Salida de Cliente">3. Salida de Cliente</option>
+                        <option value="Retorno Base MEJ">4. Retorno Base MEJ</option>
+                    </select>
+                </div>
+                <input type="number" step="0.1" id="bitKm" required placeholder="Kilometraje (KM)" class="w-full text-sm border rounded-lg px-3 py-2">
+                <textarea id="bitObservaciones" placeholder="Observaciones (opcional)" rows="2" class="w-full text-sm border rounded-lg px-3 py-2"></textarea>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modalBitacora')" class="px-4 py-2 text-sm bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit" id="btnGuardarBitacora" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg flex items-center gap-2">
+                        <span id="btnGuardarBitacoraTexto">Registrar Etapa</span>
+                        <i id="btnGuardarBitacoraSpinner" class="fa-solid fa-circle-notch spinner hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- SCRIPTS -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz1hkKndB0nzuzRD5pc5gvwaNJNq_Hp6CEJHW1ujLZywa9Zs3tKWE8odVJjYfy8Lz77/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbybUYvBxmU5UJFqpgf8NOAa_jNxCicrszt6x2LER8J0SvcHG3XACMLQ6Tpu8bbaSxx_/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
         let vehiculosCache = [];
+        let usuariosCache = [];
+        let bitacoraCache = [];
         let fotoBase64Actual = null; // { base64, nombre, mime }
         let fotoUrlEnEdicion = null; // conserva la foto existente al editar si no se sube una nueva
+        let sesionActual = null; // { id_usuario, nombre, correo, rol }
         const ESTADOS_OCUPAN_VEHICULO = ['Programado', 'En Ejecución'];
+        const CLAVE_SESION = 'mej_sesion';
 
         // ---------- Saneamiento de fechas/horas ----------
         // Red de seguridad en el frontend: aunque el backend ya formatea las fechas/horas
@@ -397,12 +508,98 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            cargarDatos();
+            restaurarSesion();
         });
+
+        // ---------- Autenticación ----------
+        function restaurarSesion() {
+            try {
+                const guardada = localStorage.getItem(CLAVE_SESION);
+                if (guardada) {
+                    sesionActual = JSON.parse(guardada);
+                    mostrarApp();
+                    return;
+                }
+            } catch (e) { /* sesión corrupta, se ignora y se pide login de nuevo */ }
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('appShell').classList.add('hidden');
+        }
+
+        function mostrarApp() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('appShell').classList.remove('hidden');
+            document.getElementById('sesionNombre').textContent = sesionActual.nombre || sesionActual.correo || '';
+            document.getElementById('sesionRol').textContent = sesionActual.rol || '';
+            aplicarPermisosPorRol(sesionActual.rol);
+            cargarDatos();
+        }
+
+        async function iniciarSesion(event) {
+            event.preventDefault();
+            const correo = document.getElementById('loginCorreo').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('btnLogin');
+            const btnTexto = document.getElementById('btnLoginTexto');
+            const btnSpinner = document.getElementById('btnLoginSpinner');
+            const errorBox = document.getElementById('loginError');
+            errorBox.classList.add('hidden');
+
+            btn.disabled = true;
+            btnTexto.textContent = 'Verificando...';
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ tipo: 'login', correo, password }) });
+                const resp = await res.json();
+                if (resp.result === 'error') throw new Error(resp.message || 'No se pudo iniciar sesión');
+
+                sesionActual = resp.usuario;
+                localStorage.setItem(CLAVE_SESION, JSON.stringify(sesionActual));
+                mostrarApp();
+            } catch (err) {
+                errorBox.textContent = err.message;
+                errorBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btnTexto.textContent = 'Ingresar';
+                btnSpinner.classList.add('hidden');
+            }
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem(CLAVE_SESION);
+            sesionActual = null;
+            location.reload();
+        }
+
+        // ---------- Permisos por rol ----------
+        // ADMIN y SUPERVISOR: acceso completo. OPERADOR: solo Programación + Registrar Etapa/KM.
+        function aplicarPermisosPorRol(rol) {
+            const rolNorm = String(rol || '').toUpperCase();
+            const esOperador = (rolNorm === 'OPERADOR');
+
+            const navsRestringidos = ['navLobby', 'navClientes', 'navCotizaciones', 'navVehiculos', 'navFacturacion'];
+            navsRestringidos.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', esOperador);
+            });
+            // navBitacora: visible para todos (Admin/Supervisor lo usan para auditar; Operador para su propio registro)
+            const navBit = document.getElementById('navBitacora');
+            if (navBit) navBit.classList.remove('hidden');
+
+            const btnFlotante = document.getElementById('btnRegistrarEtapaFlotante');
+            if (btnFlotante) btnFlotante.classList.toggle('hidden', !esOperador);
+
+            if (esOperador) {
+                switchTab('programacion');
+            } else {
+                switchTab('lobby');
+            }
+        }
 
         // ---------- Navegación ----------
         function switchTab(tab) {
-            ['Lobby', 'Clientes', 'Cotizaciones', 'Programacion', 'Vehiculos', 'Facturacion'].forEach(t => {
+            ['Lobby', 'Clientes', 'Cotizaciones', 'Programacion', 'Vehiculos', 'Facturacion', 'Bitacora'].forEach(t => {
                 document.getElementById('sec' + t).classList.add('hidden');
                 let nav = document.getElementById('nav' + t);
                 if (nav) nav.className = "px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100";
@@ -481,6 +678,7 @@
             document.getElementById('cotVehiculoAsignado').value = '';
             document.getElementById('cotHoraInicio').value = '';
             document.getElementById('cotHoraFin').value = '';
+            Array.from(document.getElementById('cotPersonal').options).forEach(o => o.selected = false);
             quitarFoto();
             openModal('modalCotizacion');
             fetch(`${WEB_APP_URL}?action=siguiente_id_cotizacion`)
@@ -510,6 +708,11 @@
             document.getElementById('cotVehiculoAsignado').value = cot.vehiculo_asignado || '';
             document.getElementById('cotHoraInicio').value = cot.hora_inicio || '';
             document.getElementById('cotHoraFin').value = cot.hora_fin || '';
+
+            const personalAsignado = (cot.conductor_asignado || '').split(',').map(n => n.trim()).filter(Boolean);
+            Array.from(document.getElementById('cotPersonal').options).forEach(o => {
+                o.selected = personalAsignado.includes(o.value);
+            });
 
             fotoBase64Actual = null;
             document.getElementById('cotFotoFile').value = '';
@@ -655,6 +858,7 @@
                                 <div class="min-w-0">
                                     <p class="text-sm font-semibold text-slate-800 truncate">${s.cliente || ''} <span class="text-slate-400 font-normal">— ${s.id_cotizacion || ''}</span></p>
                                     <p class="text-xs text-slate-500 truncate">${s.descripcion || ''}</p>
+                                    ${s.conductor_asignado ? `<p class="text-xs text-indigo-600 truncate"><i class="fa-solid fa-user-group mr-1"></i>${s.conductor_asignado}</p>` : ''}
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 flex-wrap shrink-0">
@@ -680,6 +884,23 @@
         }
 
         function cargarDatos() {
+            // Usuarios (personal) — para el multi-select de Cotizaciones y para el módulo de Bitácora
+            fetch(`${WEB_APP_URL}?action=usuarios`).then(res => res.json()).then(data => {
+                usuariosCache = data;
+                let selectPersonal = document.getElementById('cotPersonal');
+                if (selectPersonal) {
+                    const seleccionPrevia = Array.from(selectPersonal.selectedOptions).map(o => o.value);
+                    selectPersonal.innerHTML = '';
+                    data.filter(u => String(u.estado || '').toLowerCase() === 'activo').forEach(u => {
+                        const opt = document.createElement('option');
+                        opt.value = u.nombre;
+                        opt.textContent = `${u.nombre} (${u.rol || ''})`;
+                        if (seleccionPrevia.includes(u.nombre)) opt.selected = true;
+                        selectPersonal.appendChild(opt);
+                    });
+                }
+            });
+
             // Clientes
             fetch(`${WEB_APP_URL}?action=clientes`).then(res => res.json()).then(data => {
                 clientesCache = data;
@@ -738,6 +959,7 @@
                         <td class="p-3">${cot.fecha_programada || '-'}</td>
                         <td class="p-3 text-emerald-700 font-mono">${cot.vehiculo_asignado || '-'}</td>
                         <td class="p-3">${horario}</td>
+                        <td class="p-3 text-xs text-slate-600">${cot.conductor_asignado || '-'}</td>
                         <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span>${etiquetaTentativa}</td>
                         <td class="p-3">${badgeFacturado}</td>
                         <td class="p-3"><button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button></td>
@@ -797,6 +1019,34 @@
                     </tr>`;
                 });
             });
+
+            // Bitácora de rutas
+            fetch(`${WEB_APP_URL}?action=bitacora`).then(res => res.json()).then(data => {
+                bitacoraCache = data;
+                let tbody = document.getElementById('tableBitacora');
+                if (!tbody) return;
+                tbody.innerHTML = "";
+                const coloresEtapa = {
+                    'Salida Base MEJ': 'bg-blue-50 text-blue-700',
+                    'Llegada a Cliente': 'bg-amber-50 text-amber-700',
+                    'Salida de Cliente': 'bg-orange-50 text-orange-700',
+                    'Retorno Base MEJ': 'bg-emerald-50 text-emerald-700'
+                };
+                const ordenados = data.slice().sort((a, b) => String(b.fecha_hora || '').localeCompare(String(a.fecha_hora || '')));
+                ordenados.forEach(b => {
+                    const clase = coloresEtapa[b.etapa] || 'bg-slate-100 text-slate-600';
+                    const usuario = usuariosCache.find(u => u.id_usuario === b.id_usuario);
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50">
+                        <td class="p-3 pl-4 font-mono font-bold text-purple-600">${b.id_cotizacion || ''}</td>
+                        <td class="p-3 font-mono">${b.placa_vehiculo || ''}</td>
+                        <td class="p-3"><span class="${clase} text-xs px-2 py-1 rounded-full font-medium">${b.etapa || ''}</span></td>
+                        <td class="p-3 text-slate-500">${b.fecha_hora || ''}</td>
+                        <td class="p-3">${b.km_lectura || ''}</td>
+                        <td class="p-3">${usuario ? usuario.nombre : (b.id_usuario || '')}</td>
+                        <td class="p-3 text-slate-500">${b.observaciones || ''}</td>
+                    </tr>`;
+                });
+            });
         }
 
         // Autocompleta cliente y monto de la factura al elegir la cotización
@@ -806,6 +1056,89 @@
             if (cot) {
                 document.getElementById('facCliente').value = cot.cliente || '';
                 document.getElementById('facMonto').value = cot.monto || '';
+            }
+        }
+
+        // ---------- Bitácora de rutas ----------
+        function abrirModalBitacora() {
+            const select = document.getElementById('bitCotizacion');
+            const disponibles = cotizacionesCache.filter(c => c.estado === 'Programado' || c.estado === 'En Ejecución');
+            select.innerHTML = '<option value="">Selecciona un servicio...</option>' +
+                disponibles.map(c => `<option value="${c.id_cotizacion}">${c.id_cotizacion} — ${c.cliente} (${c.estado})</option>`).join('');
+
+            document.getElementById('bitPlaca').value = '';
+            document.getElementById('bitCliente').value = '';
+            document.getElementById('bitPersonal').value = '';
+            document.getElementById('bitEtapa').value = 'Salida Base MEJ';
+            document.getElementById('bitKm').value = '';
+            document.getElementById('bitObservaciones').value = '';
+
+            if (disponibles.length === 0) {
+                mostrarToast('No hay servicios en estado Programado o En Ejecución para registrar una etapa.', 'warning');
+            }
+            openModal('modalBitacora');
+        }
+
+        function autocompletarBitacora() {
+            const idCot = document.getElementById('bitCotizacion').value;
+            const cot = cotizacionesCache.find(c => c.id_cotizacion === idCot);
+            if (cot) {
+                document.getElementById('bitPlaca').value = cot.vehiculo_asignado || 'Sin vehículo asignado';
+                document.getElementById('bitCliente').value = cot.cliente || '';
+                document.getElementById('bitPersonal').value = cot.conductor_asignado || 'Sin personal asignado';
+
+                // Sugiere automáticamente la siguiente etapa según lo ya registrado para este servicio
+                const etapasOrden = ['Salida Base MEJ', 'Llegada a Cliente', 'Salida de Cliente', 'Retorno Base MEJ'];
+                const registradas = bitacoraCache.filter(b => b.id_cotizacion === idCot).map(b => b.etapa);
+                const siguiente = etapasOrden.find(e => !registradas.includes(e));
+                if (siguiente) document.getElementById('bitEtapa').value = siguiente;
+            } else {
+                document.getElementById('bitPlaca').value = '';
+                document.getElementById('bitCliente').value = '';
+                document.getElementById('bitPersonal').value = '';
+            }
+        }
+
+        async function guardarEtapaBitacora(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnGuardarBitacora');
+            const btnTexto = document.getElementById('btnGuardarBitacoraTexto');
+            const btnSpinner = document.getElementById('btnGuardarBitacoraSpinner');
+
+            const idCotizacion = document.getElementById('bitCotizacion').value;
+            if (!idCotizacion) { mostrarToast('Selecciona un servicio antes de registrar la etapa.', 'error'); return; }
+            if (!sesionActual) { mostrarToast('Tu sesión expiró, vuelve a iniciar sesión.', 'error'); return; }
+
+            const data = {
+                tipo: 'bitacora',
+                id_cotizacion: idCotizacion,
+                id_usuario: sesionActual.id_usuario,
+                placa_vehiculo: document.getElementById('bitPlaca').value,
+                etapa: document.getElementById('bitEtapa').value,
+                km_lectura: document.getElementById('bitKm').value,
+                observaciones: document.getElementById('bitObservaciones').value
+            };
+
+            btn.disabled = true;
+            btnTexto.textContent = 'Guardando...';
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
+                const resp = await res.json();
+                if (resp.result === 'error') throw new Error(resp.message || 'Error desconocido');
+
+                closeModal('modalBitacora');
+                cargarDatos();
+                const mensajeExtra = resp.nuevo_estado_cotizacion ? ` El servicio ${idCotizacion} pasó a estado "${resp.nuevo_estado_cotizacion}".` : '';
+                mostrarToast(`Etapa "${data.etapa}" registrada con éxito.${mensajeExtra}`, 'success');
+                event.target.reset();
+            } catch (err) {
+                mostrarToast('Error al registrar la etapa: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btnTexto.textContent = 'Registrar Etapa';
+                btnSpinner.classList.add('hidden');
             }
         }
 
@@ -844,6 +1177,7 @@
                 data.vehiculo_asignado = document.getElementById('cotVehiculoAsignado').value;
                 data.hora_inicio = document.getElementById('cotHoraInicio').value;
                 data.hora_fin = document.getElementById('cotHoraFin').value;
+                data.conductor_asignado = Array.from(document.getElementById('cotPersonal').selectedOptions).map(o => o.value).join(', ');
 
                 if (fotoBase64Actual) {
                     data.foto_base64 = fotoBase64Actual.base64;
@@ -925,5 +1259,8 @@
 
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
     </script>
+
+    </div><!-- /appShell -->
+
 </body>
 </html>
