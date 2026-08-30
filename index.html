@@ -169,7 +169,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Descripción</th><th class="p-3">Peso (TN)</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Personal</th><th class="p-3">Estado</th><th class="p-3">Facturado</th><th class="p-3">Acción</th></tr></thead>
+                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Tipo de Servicio</th><th class="p-3">Descripción</th><th class="p-3">Peso (TN)</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Personal</th><th class="p-3">Estado</th><th class="p-3">Facturado</th><th class="p-3">Acción</th></tr></thead>
                     <tbody id="tableCotizaciones" class="divide-y divide-slate-200 text-sm"></tbody>
                 </table>
             </div>
@@ -282,8 +282,8 @@
     </div>
 
     <!-- MODAL COTIZACION -->
-    <div id="modalCotizacion" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 my-8">
+    <div id="modalCotizacion" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
             <h3 id="modalCotizacionTitulo" class="text-lg font-bold mb-4">Nueva Cotización</h3>
             <form onsubmit="guardarRegistro(event, 'cotizacion')" class="space-y-3">
                 <input type="hidden" id="cotModo" value="crear">
@@ -295,20 +295,66 @@
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cliente</label>
                     <select id="cotCliente" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white"></select>
                 </div>
-                <input type="text" id="cotDesc" required placeholder="Descripción del servicio" class="w-full text-sm border rounded-lg px-3 py-2">
 
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="0.01" id="cotPeso" required placeholder="Peso aprox. (TN)" class="w-full text-sm border rounded-lg px-3 py-2">
-                    <select id="cotTipoMaterial" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
-                        <option value="">Tipo de Material</option>
-                        <option value="No peligroso">No peligroso</option>
-                        <option value="Peligroso">Peligroso</option>
-                        <option value="Valorización">Valorización</option>
-                        <option value="Mixto">Mixto</option>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Servicio</label>
+                    <select id="cotTipoServicio" required onchange="actualizarUIPorTipoServicio()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
+                        <option value="">Selecciona el tipo de servicio...</option>
+                        <option value="Destrucción">Destrucción</option>
+                        <option value="Recolección, transporte y disposición final">Recolección, transporte y disposición final</option>
+                        <option value="Recolección, transporte y acondicionamiento">Recolección, transporte y acondicionamiento</option>
+                        <option value="RAEE">RAEE (multipunto)</option>
+                        <option value="Transporte">Transporte (multipunto)</option>
                     </select>
                 </div>
 
-                <input type="text" id="cotUbicacion" required placeholder="Ubicación de la planta" class="w-full text-sm border rounded-lg px-3 py-2">
+                <input type="text" id="cotDesc" required placeholder="Descripción del servicio" class="w-full text-sm border rounded-lg px-3 py-2">
+
+                <!-- Subtipo / ruta específica: Destrucción y Recolección-disposición final -->
+                <div id="cotSubtipoWrap" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Ruta / destino específico</label>
+                    <select id="cotSubtipoDestino" class="w-full text-sm border rounded-lg px-3 py-2 bg-white"></select>
+                </div>
+
+                <!-- Puntos de recojo dinámicos: RAEE y Transporte -->
+                <div id="cotPuntosWrap" class="hidden border border-blue-100 bg-blue-50/50 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-bold text-blue-800 uppercase"><i class="fa-solid fa-route mr-1"></i>Puntos de recojo (ruta dinámica)</label>
+                        <button type="button" onclick="agregarPuntoRecojo()" class="text-xs text-blue-700 hover:underline font-medium"><i class="fa-solid fa-plus mr-1"></i>Agregar punto</button>
+                    </div>
+                    <div id="cotPuntosLista" class="space-y-2"></div>
+                    <p class="text-[10px] text-slate-500 mt-1">Base MEJ → Punto 1 → Punto 2 → ... → Destino final → Retorno Base MEJ.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Destino final</label>
+                    <input type="text" id="cotDestinoFinal" placeholder="Ej: Relleno Sanitario X, Planta de Valorización, dirección del cliente..." class="w-full text-sm border rounded-lg px-3 py-2">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" id="cotPeso" placeholder="Peso aprox. (TN)" class="w-full text-sm border rounded-lg px-3 py-2">
+                    <input type="number" step="0.01" id="cotVolumen" placeholder="Volumen aprox. (M3)" class="w-full text-sm border rounded-lg px-3 py-2">
+                </div>
+                <p class="text-[10px] text-slate-400 -mt-2">Completa al menos uno de los dos (Peso o Volumen) para poder asignar vehículo.</p>
+
+                <select id="cotTipoMaterial" required onchange="actualizarUIPorTipoServicio()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
+                    <option value="">Tipo de Material</option>
+                    <option value="No peligroso">No peligroso</option>
+                    <option value="Peligroso">Peligroso</option>
+                    <option value="Valorización">Valorización</option>
+                    <option value="Mixto">Mixto</option>
+                </select>
+
+                <input type="text" id="cotUbicacion" required placeholder="Ubicación del generador (dirección de origen del residuo)" class="w-full text-sm border rounded-lg px-3 py-2">
+
+                <div class="border-t border-slate-200 pt-3 mt-1">
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-2"><i class="fa-solid fa-map-location-dot mr-1 text-blue-600"></i>Ruta y distancia</label>
+                    <div class="grid grid-cols-[1fr_auto] gap-2">
+                        <input type="number" step="0.1" id="cotKmEstimado" placeholder="KM estimado" class="w-full text-sm border rounded-lg px-3 py-2">
+                        <button type="button" onclick="calcularRutaGoogleMaps()" class="text-xs bg-blue-50 text-blue-700 rounded-lg px-3 py-2 hover:bg-blue-100 whitespace-nowrap font-medium"><i class="fa-solid fa-route mr-1"></i>Calcular con Maps</button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Origen fijo: Base MEJ - Lurín. También puedes ingresar el KM manualmente.</p>
+                </div>
 
                 <div class="grid grid-cols-2 gap-2">
                     <select id="cotTipoPago" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
@@ -508,7 +554,7 @@
                     <div class="flex items-start gap-2">
                         <i class="fa-solid fa-weight-hanging text-slate-500 w-5 mt-0.5"></i>
                         <div>
-                            <p class="text-[10px] font-semibold text-slate-400 uppercase">Peso aprox.</p>
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase">Carga (Peso/Vol.)</p>
                             <p class="text-slate-800" id="detPeso"></p>
                         </div>
                     </div>
@@ -550,6 +596,13 @@
                         <p class="text-slate-800" id="detPersonal"></p>
                     </div>
                 </div>
+                <div id="detRutaWrap" class="flex items-start gap-2 hidden bg-blue-50 border border-blue-100 rounded-lg p-2.5">
+                    <i class="fa-solid fa-route text-blue-600 w-5 mt-0.5"></i>
+                    <div>
+                        <p class="text-[10px] font-semibold text-blue-500 uppercase">Ruta del servicio</p>
+                        <div class="text-slate-800 text-xs" id="detRuta"></div>
+                    </div>
+                </div>
                 <div id="detObservacionesWrap" class="flex items-start gap-2 hidden">
                     <i class="fa-solid fa-comment-dots text-amber-500 w-5 mt-0.5"></i>
                     <div>
@@ -572,7 +625,7 @@
 
     <!-- SCRIPTS DE LÓGICA -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx9AhjvRP3XyFFzZwII4Chb7NKlvSyE-MCoBNaUUdcBR4j7-pHtq8U4lNfS9X7Zj5Ra/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyoz5KMIPK1LDPr4TiB23xyJfZ5tO2SsHBUliA7m-297YoTQjXiSMDzs-L-aMHFa-MN/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
@@ -776,16 +829,169 @@
             openModal('modalCliente');
         }
 
+        // ---------- Tipo de Servicio / Puntos dinámicos (flujo Bizagi) ----------
+        const ORIGEN_BASE_MEJ = 'Base MEJ, Av. Los Eucaliptos, Lurín, Lima, Perú';
+
+        // Muestra/oculta subtipo (Destrucción, Disposición final) y puntos dinámicos (RAEE, Transporte)
+        function actualizarUIPorTipoServicio() {
+            const tipo = document.getElementById('cotTipoServicio').value;
+            const material = document.getElementById('cotTipoMaterial').value;
+            const wrapSubtipo = document.getElementById('cotSubtipoWrap');
+            const selectSubtipo = document.getElementById('cotSubtipoDestino');
+            const wrapPuntos = document.getElementById('cotPuntosWrap');
+
+            wrapSubtipo.classList.add('hidden');
+            wrapPuntos.classList.add('hidden');
+            selectSubtipo.innerHTML = '';
+
+            if (tipo === 'Destrucción') {
+                wrapSubtipo.classList.remove('hidden');
+                selectSubtipo.innerHTML = `
+                    <option value="Directo a Relleno Sanitario">Directo a Relleno Sanitario (RR.SS)</option>
+                    <option value="Con paso previo por MEJ">Con paso previo por MEJ antes del Relleno Sanitario</option>`;
+
+            } else if (tipo === 'Recolección, transporte y disposición final') {
+                wrapSubtipo.classList.remove('hidden');
+                if (material === 'Peligroso') {
+                    selectSubtipo.innerHTML = `<option value="Relleno Sanitario (RR.SS)">Relleno Sanitario (RR.SS) — obligatorio para residuo peligroso</option>`;
+                } else {
+                    selectSubtipo.innerHTML = `
+                        <option value="Planta de Valorización">Planta de Valorización</option>
+                        <option value="Relleno Sanitario (RR.SA)">Relleno Sanitario (RR.SA)</option>`;
+                }
+
+            } else if (tipo === 'RAEE' || tipo === 'Transporte') {
+                wrapPuntos.classList.remove('hidden');
+                if (document.getElementById('cotPuntosLista').children.length === 0) {
+                    agregarPuntoRecojo();
+                    agregarPuntoRecojo();
+                }
+            }
+            // "Recolección, transporte y acondicionamiento": sin subtipo ni multipunto (Base → Generador → Base)
+        }
+
+        function agregarPuntoRecojo() {
+            const lista = document.getElementById('cotPuntosLista');
+            const n = lista.children.length + 1;
+            const fila = document.createElement('div');
+            fila.className = 'flex gap-2 items-center';
+            fila.innerHTML = `
+                <span class="text-xs font-semibold text-blue-700 w-16 shrink-0">Punto ${n}</span>
+                <input type="text" class="punto-recojo-input flex-1 text-sm border rounded-lg px-2 py-1.5" placeholder="Dirección exacta del punto de recojo">
+                <button type="button" onclick="this.parentElement.remove(); renumerarPuntos()" class="text-red-500 hover:text-red-700 shrink-0"><i class="fa-solid fa-trash"></i></button>`;
+            lista.appendChild(fila);
+        }
+
+        function renumerarPuntos() {
+            const lista = document.getElementById('cotPuntosLista');
+            Array.from(lista.children).forEach((fila, i) => {
+                fila.querySelector('span').textContent = `Punto ${i + 1}`;
+            });
+        }
+
+        function obtenerPuntosRecojo() {
+            return Array.from(document.querySelectorAll('#cotPuntosLista .punto-recojo-input'))
+                .map(input => input.value.trim())
+                .filter(Boolean);
+        }
+
+        function limpiarPuntosRecojo() {
+            document.getElementById('cotPuntosLista').innerHTML = '';
+        }
+
+        function cargarPuntosRecojo(puntosTexto) {
+            limpiarPuntosRecojo();
+            const puntos = (puntosTexto || '').split(';').map(p => p.trim()).filter(Boolean);
+            if (puntos.length === 0) return;
+            puntos.forEach(direccion => {
+                agregarPuntoRecojo();
+                const inputs = document.querySelectorAll('#cotPuntosLista .punto-recojo-input');
+                inputs[inputs.length - 1].value = direccion;
+            });
+        }
+
+        // ---------- Cálculo de ruta con Google Maps ----------
+        // IMPORTANTE: reemplaza esto con tu propia API Key de Google Maps (con Directions API
+        // habilitada y facturación activa en Google Cloud). Sin una key válida, este botón
+        // mostrará un aviso en vez de calcular la distancia.
+        const GOOGLE_MAPS_API_KEY = 'TU_API_KEY_DE_GOOGLE_MAPS_AQUI';
+        let googleMapsCargado = false;
+
+        function cargarGoogleMapsApi() {
+            return new Promise((resolve, reject) => {
+                if (googleMapsCargado && window.google && window.google.maps) { resolve(); return; }
+                if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY.indexOf('TU_API_KEY') === 0) {
+                    reject(new Error('Falta configurar tu API Key de Google Maps en el código (constante GOOGLE_MAPS_API_KEY).'));
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+                script.onload = () => { googleMapsCargado = true; resolve(); };
+                script.onerror = () => reject(new Error('No se pudo cargar la API de Google Maps. Revisa la key y la facturación.'));
+                document.head.appendChild(script);
+            });
+        }
+
+        async function calcularRutaGoogleMaps() {
+            const tipo = document.getElementById('cotTipoServicio').value;
+            let paradas = [];
+
+            if (tipo === 'RAEE' || tipo === 'Transporte') {
+                paradas = obtenerPuntosRecojo();
+            } else {
+                const ubicacion = document.getElementById('cotUbicacion').value.trim();
+                if (ubicacion) paradas.push(ubicacion);
+            }
+            const destino = document.getElementById('cotDestinoFinal').value.trim();
+            if (destino) paradas.push(destino);
+
+            if (paradas.length === 0) {
+                mostrarToast('Ingresa al menos la ubicación del generador o un punto de recojo antes de calcular la ruta.', 'error');
+                return;
+            }
+
+            try {
+                await cargarGoogleMapsApi();
+            } catch (err) {
+                mostrarToast(err.message, 'error');
+                return;
+            }
+
+            const directionsService = new google.maps.DirectionsService();
+            const waypoints = paradas.slice(0, -1).map(p => ({ location: p, stopover: true }));
+            const destinoFinalRuta = paradas[paradas.length - 1];
+
+            directionsService.route({
+                origin: ORIGEN_BASE_MEJ,
+                destination: ORIGEN_BASE_MEJ, // ida y vuelta a Base MEJ
+                waypoints: waypoints.concat([{ location: destinoFinalRuta, stopover: true }]),
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === 'OK') {
+                    const metros = result.routes[0].legs.reduce((total, leg) => total + leg.distance.value, 0);
+                    const km = (metros / 1000).toFixed(1);
+                    document.getElementById('cotKmEstimado').value = km;
+                    mostrarToast(`Ruta calculada: ${km} km (ida y vuelta a Base MEJ, ${paradas.length} parada${paradas.length === 1 ? '' : 's'}).`, 'success');
+                } else {
+                    mostrarToast('No se pudo calcular la ruta con Google Maps: ' + status, 'error');
+                }
+            });
+        }
+
         function abrirModalCotizacion() {
             document.getElementById('cotModo').value = 'crear';
             document.getElementById('modalCotizacionTitulo').textContent = 'Nueva Cotización';
             document.getElementById('btnGuardarCotizacionTexto').textContent = 'Guardar Cotización';
             document.getElementById('cotId').value = "Generando...";
             document.getElementById('cotCliente').value = '';
+            document.getElementById('cotTipoServicio').value = '';
             document.getElementById('cotDesc').value = '';
             document.getElementById('cotPeso').value = '';
+            document.getElementById('cotVolumen').value = '';
             document.getElementById('cotTipoMaterial').value = '';
             document.getElementById('cotUbicacion').value = '';
+            document.getElementById('cotDestinoFinal').value = '';
+            document.getElementById('cotKmEstimado').value = '';
             document.getElementById('cotTipoPago').value = '';
             document.getElementById('cotMonto').value = '';
             document.getElementById('cotEstado').value = 'En Cotización';
@@ -793,6 +999,8 @@
             document.getElementById('cotVehiculoAsignado').value = '';
             document.getElementById('cotHoraInicio').value = '';
             document.getElementById('cotHoraFin').value = '';
+            limpiarPuntosRecojo();
+            actualizarUIPorTipoServicio();
             Array.from(document.getElementById('cotPersonal').options).forEach(o => o.selected = false);
             quitarFoto();
             openModal('modalCotizacion');
@@ -811,10 +1019,14 @@
             document.getElementById('btnGuardarCotizacionTexto').textContent = 'Actualizar Cotización';
             document.getElementById('cotId').value = cot.id_cotizacion || '';
             document.getElementById('cotCliente').value = cot.cliente || '';
+            document.getElementById('cotTipoServicio').value = cot.tipo_servicio || '';
             document.getElementById('cotDesc').value = cot.descripcion || '';
             document.getElementById('cotPeso').value = cot.peso_aprox || '';
+            document.getElementById('cotVolumen').value = cot.volumen_aprox || '';
             document.getElementById('cotTipoMaterial').value = cot.tipo_material || '';
             document.getElementById('cotUbicacion').value = cot.ubicacion || '';
+            document.getElementById('cotDestinoFinal').value = cot.destino || '';
+            document.getElementById('cotKmEstimado').value = cot.km_estimado || '';
             document.getElementById('cotTipoPago').value = cot.tipo_pago || '';
             document.getElementById('cotMonto').value = cot.monto || '';
             document.getElementById('cotEstado').value = cot.estado || 'En Cotización';
@@ -822,6 +1034,10 @@
             document.getElementById('cotVehiculoAsignado').value = cot.vehiculo_asignado || '';
             document.getElementById('cotHoraInicio').value = cot.hora_inicio || '';
             document.getElementById('cotHoraFin').value = cot.hora_fin || '';
+
+            cargarPuntosRecojo(cot.puntos_recojo);
+            actualizarUIPorTipoServicio();
+            if (cot.subtipo_destino) document.getElementById('cotSubtipoDestino').value = cot.subtipo_destino;
 
             const personalAsignado = (cot.conductor_asignado || '').split(',').map(n => n.trim()).filter(Boolean);
             Array.from(document.getElementById('cotPersonal').options).forEach(o => {
@@ -842,6 +1058,7 @@
 
             openModal('modalCotizacion');
         }
+
 
         function previsualizarFoto(event) {
             const file = event.target.files[0];
@@ -927,12 +1144,26 @@
             document.getElementById('detEstadoBadge').className = 'text-xs px-2 py-1 rounded-full font-medium ' + (ESTILO_ESTADO_BADGE[cot.estado] || 'bg-slate-100 text-slate-600');
             document.getElementById('detUbicacion').textContent = cot.ubicacion || 'Sin ubicación registrada';
             document.getElementById('detDescripcion').textContent = cot.descripcion || '-';
-            document.getElementById('detPeso').textContent = cot.peso_aprox ? `${cot.peso_aprox} TN` : '-';
+            const cargaTexto = [cot.peso_aprox ? `${cot.peso_aprox} TN` : '', cot.volumen_aprox ? `${cot.volumen_aprox} M3` : ''].filter(Boolean).join(' / ');
+            document.getElementById('detPeso').textContent = cargaTexto || '-';
             document.getElementById('detMaterial').textContent = cot.tipo_material || '-';
             document.getElementById('detFecha').textContent = cot.fecha_programada || 'Sin fecha';
             document.getElementById('detHorario').textContent = (cot.hora_inicio && cot.hora_fin) ? `${cot.hora_inicio} – ${cot.hora_fin}` : (cot.hora_inicio || cot.hora_fin || 'Sin horario');
             document.getElementById('detVehiculo').textContent = cot.vehiculo_asignado || 'Sin vehículo asignado';
             document.getElementById('detPersonal').textContent = cot.conductor_asignado || 'Sin personal asignado';
+
+            const rutaWrap = document.getElementById('detRutaWrap');
+            const partesRuta = [];
+            if (cot.tipo_servicio) partesRuta.push(cot.tipo_servicio + (cot.subtipo_destino ? ` (${cot.subtipo_destino})` : ''));
+            if (cot.puntos_recojo) partesRuta.push('Puntos: ' + cot.puntos_recojo.split(';').map(p => p.trim()).filter(Boolean).join(' → '));
+            if (cot.destino) partesRuta.push('Destino final: ' + cot.destino);
+            if (cot.km_estimado) partesRuta.push(`${cot.km_estimado} km estimados (ida y vuelta)`);
+            if (partesRuta.length > 0) {
+                document.getElementById('detRuta').innerHTML = partesRuta.map(p => `<span class="block">${p}</span>`).join('');
+                rutaWrap.classList.remove('hidden');
+            } else {
+                rutaWrap.classList.add('hidden');
+            }
 
             const obsWrap = document.getElementById('detObservacionesWrap');
             if (cot.observaciones) {
@@ -1164,6 +1395,7 @@
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
                         <td class="p-3 pl-4 font-mono font-bold text-purple-600">${cot.id_cotizacion || ''}</td>
                         <td class="p-3 font-semibold">${cot.cliente || ''}</td>
+                        <td class="p-3 text-xs text-slate-600">${cot.tipo_servicio || '-'}</td>
                         <td class="p-3">${cot.descripcion || ''}</td>
                         <td class="p-3">${cot.peso_aprox || ''}</td>
                         <td class="p-3">${cot.tipo_material || ''}</td>
@@ -1268,6 +1500,27 @@
             }
         }
 
+        // Determina la secuencia de etapas esperada según el tipo de servicio y sus puntos
+        // dinámicos: para RAEE/Transporte multipunto, genera Llegada/Salida por cada punto.
+        function generarEtapasParaCotizacion(cot) {
+            const tipo = cot.tipo_servicio || '';
+            if ((tipo === 'RAEE' || tipo === 'Transporte') && cot.puntos_recojo) {
+                const puntos = cot.puntos_recojo.split(';').map(p => p.trim()).filter(Boolean);
+                const etapas = ['Salida Base MEJ'];
+                puntos.forEach((p, i) => {
+                    etapas.push(`Llegada Punto ${i + 1}`);
+                    etapas.push(`Salida Punto ${i + 1}`);
+                });
+                if (cot.destino) {
+                    etapas.push('Llegada a Destino');
+                    etapas.push('Salida de Destino');
+                }
+                etapas.push('Retorno Base MEJ');
+                return etapas;
+            }
+            return ['Salida Base MEJ', 'Llegada a Cliente', 'Salida de Cliente', 'Retorno Base MEJ'];
+        }
+
         function abrirModalBitacora() {
             const select = document.getElementById('bitCotizacion');
             const disponibles = cotizacionesCache.filter(c => (c.estado === 'Programado' || c.estado === 'En Ejecución') && servicioAsignadoAUsuarioActual(c));
@@ -1277,7 +1530,7 @@
             document.getElementById('bitPlaca').value = '';
             document.getElementById('bitCliente').value = '';
             document.getElementById('bitPersonal').value = '';
-            document.getElementById('bitEtapa').value = 'Salida Base MEJ';
+            document.getElementById('bitEtapa').innerHTML = '<option value="Salida Base MEJ">1. Salida Base MEJ</option>';
             document.getElementById('bitKm').value = '';
             document.getElementById('bitObservaciones').value = '';
 
@@ -1290,19 +1543,24 @@
         function autocompletarBitacora() {
             const idCot = document.getElementById('bitCotizacion').value;
             const cot = cotizacionesCache.find(c => c.id_cotizacion === idCot);
+            const selectEtapa = document.getElementById('bitEtapa');
+
             if (cot) {
                 document.getElementById('bitPlaca').value = cot.vehiculo_asignado || 'Sin vehículo asignado';
                 document.getElementById('bitCliente').value = cot.cliente || '';
                 document.getElementById('bitPersonal').value = cot.conductor_asignado || 'Sin personal asignado';
 
-                const etapasOrden = ['Salida Base MEJ', 'Llegada a Cliente', 'Salida de Cliente', 'Retorno Base MEJ'];
+                // La secuencia de etapas se genera según el tipo de servicio y sus puntos de recojo
+                const etapasOrden = generarEtapasParaCotizacion(cot);
                 const registradas = bitacoraCache.filter(b => b.id_cotizacion === idCot).map(b => b.etapa);
+                selectEtapa.innerHTML = etapasOrden.map((e, i) => `<option value="${e}">${i + 1}. ${e}</option>`).join('');
                 const siguiente = etapasOrden.find(e => !registradas.includes(e));
-                if (siguiente) document.getElementById('bitEtapa').value = siguiente;
+                if (siguiente) selectEtapa.value = siguiente;
             } else {
                 document.getElementById('bitPlaca').value = '';
                 document.getElementById('bitCliente').value = '';
                 document.getElementById('bitPersonal').value = '';
+                selectEtapa.innerHTML = '<option value="Salida Base MEJ">1. Salida Base MEJ</option>';
             }
         }
 
@@ -1366,10 +1624,15 @@
                 data.accion = document.getElementById('cotModo').value;
                 data.id_cotizacion = document.getElementById('cotId').value || null;
                 data.cliente = document.getElementById('cotCliente').value;
+                data.tipo_servicio = document.getElementById('cotTipoServicio').value;
                 data.descripcion = document.getElementById('cotDesc').value;
+                data.subtipo_destino = document.getElementById('cotSubtipoDestino').value || '';
                 data.peso_aprox = document.getElementById('cotPeso').value;
+                data.volumen_aprox = document.getElementById('cotVolumen').value;
                 data.tipo_material = document.getElementById('cotTipoMaterial').value;
                 data.ubicacion = document.getElementById('cotUbicacion').value;
+                data.destino = document.getElementById('cotDestinoFinal').value;
+                data.km_estimado = document.getElementById('cotKmEstimado').value;
                 data.tipo_pago = document.getElementById('cotTipoPago').value;
                 data.monto = document.getElementById('cotMonto').value;
                 data.estado = document.getElementById('cotEstado').value;
@@ -1378,6 +1641,24 @@
                 data.hora_inicio = document.getElementById('cotHoraInicio').value;
                 data.hora_fin = document.getElementById('cotHoraFin').value;
                 data.conductor_asignado = Array.from(document.getElementById('cotPersonal').selectedOptions).map(o => o.value).join(', ');
+
+                // Validación: Peso Y/O Volumen — al menos uno de los dos es obligatorio
+                if (!data.peso_aprox && !data.volumen_aprox) {
+                    mostrarToast('Ingresa al menos el Peso (TN) o el Volumen (M3) del servicio.', 'error');
+                    return;
+                }
+
+                // Puntos de recojo dinámicos (RAEE / Transporte)
+                if (data.tipo_servicio === 'RAEE' || data.tipo_servicio === 'Transporte') {
+                    const puntos = obtenerPuntosRecojo();
+                    if (puntos.length === 0) {
+                        mostrarToast('Agrega al menos un punto de recojo para este tipo de servicio.', 'error');
+                        return;
+                    }
+                    data.puntos_recojo = puntos.join('; ');
+                } else {
+                    data.puntos_recojo = '';
+                }
 
                 if (fotoBase64Actual) {
                     data.foto_base64 = fotoBase64Actual.base64;
