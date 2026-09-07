@@ -169,7 +169,7 @@
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Tipo de Servicio</th><th class="p-3">Descripción</th><th class="p-3">Peso (TN)</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Personal</th><th class="p-3">Estado</th><th class="p-3">Facturado</th><th class="p-3">Acción</th></tr></thead>
+                    <thead><tr class="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase"><th class="p-3 pl-4">ID Cotización</th><th class="p-3">Cliente</th><th class="p-3">Tipo de Servicio</th><th class="p-3">Descripción</th><th class="p-3">Material</th><th class="p-3">Pago</th><th class="p-3">Monto (S/.)</th><th class="p-3">Programación</th><th class="p-3">Vehículo</th><th class="p-3">Horario</th><th class="p-3">Personal</th><th class="p-3">Estado</th><th class="p-3">Acción</th></tr></thead>
                     <tbody id="tableCotizaciones" class="divide-y divide-slate-200 text-sm"></tbody>
                 </table>
             </div>
@@ -180,11 +180,20 @@
             <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
                 <div>
                     <h2 class="text-xl font-bold text-slate-900">Programación / Calendario de Servicios</h2>
-                    <p class="text-xs text-slate-500">Servicios agendados por fecha y vehículo. Solo se muestran cotizaciones con fecha programada.</p>
+                    <p class="text-xs text-slate-500">Los servicios activos/próximos aparecen primero; los completados o rechazados al final.</p>
                 </div>
-                <select id="filtroVehiculoProgramacion" onchange="renderizarCalendario()" class="text-sm border rounded-lg px-3 py-2 bg-white w-full md:w-64">
-                    <option value="">Todos los vehículos</option>
-                </select>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <select id="filtroEstadoProgramacion" onchange="renderizarCalendario()" class="text-sm border rounded-lg px-3 py-2 bg-white flex-1 md:w-48">
+                        <option value="">Todos los estados</option>
+                        <option value="En Cotización">En Cotización</option>
+                        <option value="Programado">Programados</option>
+                        <option value="En Ejecución">En Ejecución</option>
+                        <option value="Completado">Completados</option>
+                    </select>
+                    <select id="filtroVehiculoProgramacion" onchange="renderizarCalendario()" class="text-sm border rounded-lg px-3 py-2 bg-white flex-1 md:w-48">
+                        <option value="">Todos los vehículos</option>
+                    </select>
+                </div>
             </div>
             <div id="calendarioContenedor" class="space-y-4"></div>
             <p id="calendarioVacio" class="hidden text-sm text-slate-500 text-center py-10">No hay servicios programados todavía. Asigna una fecha y vehículo en una cotización para que aparezca aquí.</p>
@@ -308,7 +317,14 @@
                     </select>
                 </div>
 
-                <input type="text" id="cotDesc" required placeholder="Descripción del servicio" class="w-full text-sm border rounded-lg px-3 py-2">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Residuo</label>
+                    <select id="cotTipoMaterial" required onchange="actualizarUIPorTipoServicio()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
+                        <option value="">Selecciona el tipo de residuo...</option>
+                        <option value="Peligroso">Peligroso</option>
+                        <option value="No peligroso">No peligroso</option>
+                    </select>
+                </div>
 
                 <!-- Subtipo / ruta específica: Destrucción y Recolección-disposición final -->
                 <div id="cotSubtipoWrap" class="hidden">
@@ -327,51 +343,48 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Descripción del servicio</label>
+                    <input type="text" id="cotDesc" required placeholder="Ej: Recolección y disposición de residuos sólidos" class="w-full text-sm border rounded-lg px-3 py-2">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Ubicación del generador</label>
+                    <input type="text" id="cotUbicacion" required placeholder="Dirección donde se recogerá el residuo (planta del cliente)" class="w-full text-sm border rounded-lg px-3 py-2">
+                </div>
+
+                <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Destino final</label>
-                    <input type="text" id="cotDestinoFinal" placeholder="Ej: Relleno Sanitario X, Planta de Valorización, dirección del cliente..." class="w-full text-sm border rounded-lg px-3 py-2">
+                    <input type="text" id="cotDestinoFinal" placeholder="Ej: Relleno Sanitario X, Planta de Valorización..." class="w-full text-sm border rounded-lg px-3 py-2">
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="0.01" id="cotPeso" placeholder="Peso aprox. (TN)" class="w-full text-sm border rounded-lg px-3 py-2">
-                    <input type="number" step="0.01" id="cotVolumen" placeholder="Volumen aprox. (M3)" class="w-full text-sm border rounded-lg px-3 py-2">
-                </div>
-                <p class="text-[10px] text-slate-400 -mt-2">Completa al menos uno de los dos (Peso o Volumen) para poder asignar vehículo.</p>
-
-                <select id="cotTipoMaterial" required onchange="actualizarUIPorTipoServicio()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
-                    <option value="">Tipo de Material</option>
-                    <option value="No peligroso">No peligroso</option>
-                    <option value="Peligroso">Peligroso</option>
-                    <option value="Valorización">Valorización</option>
-                    <option value="Mixto">Mixto</option>
-                </select>
-
-                <input type="text" id="cotUbicacion" required placeholder="Ubicación del generador (dirección de origen del residuo)" class="w-full text-sm border rounded-lg px-3 py-2">
-
-                <div class="border-t border-slate-200 pt-3 mt-1">
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-2"><i class="fa-solid fa-map-location-dot mr-1 text-blue-600"></i>Ruta y distancia</label>
-                    <div class="grid grid-cols-[1fr_auto] gap-2">
-                        <input type="number" step="0.1" id="cotKmEstimado" placeholder="KM estimado" class="w-full text-sm border rounded-lg px-3 py-2">
-                        <button type="button" onclick="calcularRutaGoogleMaps()" class="text-xs bg-blue-50 text-blue-700 rounded-lg px-3 py-2 hover:bg-blue-100 whitespace-nowrap font-medium"><i class="fa-solid fa-route mr-1"></i>Calcular con Maps</button>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Carga: Peso y/o Volumen</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" step="0.01" id="cotPeso" placeholder="Peso aprox. (TN)" class="w-full text-sm border rounded-lg px-3 py-2">
+                        <input type="number" step="0.01" id="cotVolumen" placeholder="Volumen aprox. (M3)" class="w-full text-sm border rounded-lg px-3 py-2">
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-1">Origen fijo: Base MEJ - Lurín. También puedes ingresar el KM manualmente.</p>
+                    <p class="text-[10px] text-slate-400 mt-1">Completa al menos uno de los dos para poder asignar vehículo.</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="cotTipoPago" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
-                        <option value="">Tipo de Pago</option>
-                        <option value="Contado">Contado</option>
-                        <option value="Crédito 15 días">Crédito 15 días</option>
-                        <option value="Crédito 30 días">Crédito 30 días</option>
-                        <option value="Crédito 45 días">Crédito 45 días</option>
-                    </select>
-                    <input type="number" step="0.01" id="cotMonto" required placeholder="Monto (S/.)" class="w-full text-sm border rounded-lg px-3 py-2">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo de Pago y Monto</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="cotTipoPago" required class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
+                            <option value="">Tipo de Pago</option>
+                            <option value="Contado">Contado</option>
+                            <option value="Crédito 15 días">Crédito 15 días</option>
+                            <option value="Crédito 30 días">Crédito 30 días</option>
+                            <option value="Crédito 45 días">Crédito 45 días</option>
+                        </select>
+                        <input type="number" step="0.01" id="cotMonto" required placeholder="Monto (S/.)" class="w-full text-sm border rounded-lg px-3 py-2">
+                    </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Foto de la carga (opcional)</label>
                     <input type="file" id="cotFotoFile" accept="image/*" onchange="previsualizarFoto(event)" class="w-full text-sm border rounded-lg px-3 py-2 bg-white file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-purple-50 file:text-purple-700 file:text-xs">
                     <div id="cotFotoPreviewWrap" class="hidden mt-2 flex items-center gap-2">
-                        <img id="cotFotoPreview" class="w-16 h-16 object-cover rounded-lg border border-slate-200">
+                        <div id="cotFotoImgBox"><img id="cotFotoPreview" onclick="verImagenCompleta(this.src)" onerror="manejarErrorImagen(this, 'cotFotoImgBox')" class="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-80" title="Clic para ver en tamaño completo"></div>
                         <span id="cotFotoNombre" class="text-xs text-slate-500"></span>
                         <button type="button" onclick="quitarFoto()" class="text-xs text-red-600 hover:underline ml-auto">Quitar</button>
                     </div>
@@ -524,6 +537,11 @@
         </div>
     </div>
 
+    <!-- VISOR DE IMAGEN A PANTALLA COMPLETA -->
+    <div id="modalVisorImagen" onclick="closeModal('modalVisorImagen')" class="fixed inset-0 bg-black/85 hidden items-center justify-center z-[110] p-4 cursor-zoom-out">
+        <img id="visorImagenSrc" class="max-w-full max-h-full rounded-lg shadow-2xl">
+    </div>
+
     <!-- MODAL DETALLE DE SERVICIO (Calendario / Programación) -->
     <div id="modalDetalleServicio" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
@@ -532,14 +550,17 @@
                     <p class="text-xs font-mono text-purple-600 font-bold" id="detId"></p>
                     <h3 class="text-lg font-bold text-slate-900" id="detCliente"></h3>
                 </div>
-                <span class="text-xs px-2 py-1 rounded-full font-medium" id="detEstadoBadge"></span>
+                <div class="flex flex-col items-end gap-1">
+                    <span class="text-xs px-2 py-1 rounded-full font-medium" id="detEstadoBadge"></span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-medium" id="detFacturadoBadge"></span>
+                </div>
             </div>
 
             <div class="space-y-3 text-sm">
                 <div class="flex items-start gap-2">
                     <i class="fa-solid fa-location-dot text-red-500 w-5 mt-0.5"></i>
                     <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Ubicación / Planta</p>
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Ubicación del Generador / Cliente</p>
                         <p class="text-slate-800" id="detUbicacion"></p>
                     </div>
                 </div>
@@ -611,8 +632,8 @@
                     </div>
                 </div>
                 <div id="detFotoWrap" class="hidden">
-                    <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Foto de la carga/zona</p>
-                    <img id="detFoto" class="w-full rounded-lg border border-slate-200">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Foto Referencial del Servicio</p>
+                    <div id="detFotoImgBox"><img id="detFoto" onclick="verImagenCompleta(this.src)" onerror="manejarErrorImagen(this, 'detFotoImgBox')" class="w-full rounded-lg border border-slate-200 cursor-pointer hover:opacity-90" title="Clic para ver en tamaño completo"></div>
                 </div>
             </div>
 
@@ -625,7 +646,7 @@
 
     <!-- SCRIPTS DE LÓGICA -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyoz5KMIPK1LDPr4TiB23xyJfZ5tO2SsHBUliA7m-297YoTQjXiSMDzs-L-aMHFa-MN/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3y8tQOpzf5y5rCbiKarY9SsWkUK15RmWekDQxNDd3r6yX0t2ty8SA_ffMee8R93GR/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
@@ -788,6 +809,32 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+        // Abre cualquier imagen (foto de cotización) en un visor de pantalla completa
+        function verImagenCompleta(src) {
+            if (!src) return;
+            document.getElementById('visorImagenSrc').src = src;
+            openModal('modalVisorImagen');
+        }
+
+        // Convierte cualquier link de Google Drive (formato "uc?export=view" u otros) al
+        // formato "thumbnail", más confiable para mostrarse dentro de una etiqueta <img>.
+        // Si no es un link de Drive (ej. es un Data URL base64), lo devuelve tal cual.
+        function transformarUrlImagen(url) {
+            if (!url || url.indexOf('data:') === 0) return url;
+            if (url.indexOf('drive.google.com') === -1) return url;
+            const match = url.match(/[-\w]{25,}/);
+            return match ? `https://drive.google.com/thumbnail?id=${match[0]}&sz=w2000` : url;
+        }
+
+        // Si una imagen falla al cargar (ej. enlace de Google Drive sin permisos o roto),
+        // se reemplaza por un aviso claro en vez de dejar un ícono de imagen rota.
+        function manejarErrorImagen(imgEl, contenedorId) {
+            const contenedor = document.getElementById(contenedorId);
+            if (contenedor) {
+                contenedor.innerHTML = `<p class="text-xs text-red-500 italic"><i class="fa-solid fa-triangle-exclamation mr-1"></i>No se pudo cargar la imagen. Verifica que el enlace de Drive sea público ("Cualquier persona con el enlace").</p>`;
+            }
+        }
+
         function mostrarToast(msg, tipo) {
             const t = document.getElementById('toast');
             const colores = { success: 'bg-emerald-600', error: 'bg-red-600', warning: 'bg-amber-600' };
@@ -910,73 +957,10 @@
             });
         }
 
-        // ---------- Cálculo de ruta con Google Maps ----------
-        // IMPORTANTE: reemplaza esto con tu propia API Key de Google Maps (con Directions API
-        // habilitada y facturación activa en Google Cloud). Sin una key válida, este botón
-        // mostrará un aviso en vez de calcular la distancia.
-        const GOOGLE_MAPS_API_KEY = 'TU_API_KEY_DE_GOOGLE_MAPS_AQUI';
-        let googleMapsCargado = false;
-
-        function cargarGoogleMapsApi() {
-            return new Promise((resolve, reject) => {
-                if (googleMapsCargado && window.google && window.google.maps) { resolve(); return; }
-                if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY.indexOf('TU_API_KEY') === 0) {
-                    reject(new Error('Falta configurar tu API Key de Google Maps en el código (constante GOOGLE_MAPS_API_KEY).'));
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-                script.onload = () => { googleMapsCargado = true; resolve(); };
-                script.onerror = () => reject(new Error('No se pudo cargar la API de Google Maps. Revisa la key y la facturación.'));
-                document.head.appendChild(script);
-            });
-        }
-
-        async function calcularRutaGoogleMaps() {
-            const tipo = document.getElementById('cotTipoServicio').value;
-            let paradas = [];
-
-            if (tipo === 'RAEE' || tipo === 'Transporte') {
-                paradas = obtenerPuntosRecojo();
-            } else {
-                const ubicacion = document.getElementById('cotUbicacion').value.trim();
-                if (ubicacion) paradas.push(ubicacion);
-            }
-            const destino = document.getElementById('cotDestinoFinal').value.trim();
-            if (destino) paradas.push(destino);
-
-            if (paradas.length === 0) {
-                mostrarToast('Ingresa al menos la ubicación del generador o un punto de recojo antes de calcular la ruta.', 'error');
-                return;
-            }
-
-            try {
-                await cargarGoogleMapsApi();
-            } catch (err) {
-                mostrarToast(err.message, 'error');
-                return;
-            }
-
-            const directionsService = new google.maps.DirectionsService();
-            const waypoints = paradas.slice(0, -1).map(p => ({ location: p, stopover: true }));
-            const destinoFinalRuta = paradas[paradas.length - 1];
-
-            directionsService.route({
-                origin: ORIGEN_BASE_MEJ,
-                destination: ORIGEN_BASE_MEJ, // ida y vuelta a Base MEJ
-                waypoints: waypoints.concat([{ location: destinoFinalRuta, stopover: true }]),
-                travelMode: google.maps.TravelMode.DRIVING
-            }, (result, status) => {
-                if (status === 'OK') {
-                    const metros = result.routes[0].legs.reduce((total, leg) => total + leg.distance.value, 0);
-                    const km = (metros / 1000).toFixed(1);
-                    document.getElementById('cotKmEstimado').value = km;
-                    mostrarToast(`Ruta calculada: ${km} km (ida y vuelta a Base MEJ, ${paradas.length} parada${paradas.length === 1 ? '' : 's'}).`, 'success');
-                } else {
-                    mostrarToast('No se pudo calcular la ruta con Google Maps: ' + status, 'error');
-                }
-            });
-        }
+        // Nota: la sección "Ruta y Distancia" (cálculo con Google Maps y km_estimado) se
+        // eliminó temporalmente de la interfaz a pedido — se reincorporará más adelante.
+        // El campo km_estimado sigue existiendo en la hoja de Cotizaciones por compatibilidad,
+        // simplemente ya no se recolecta desde este formulario.
 
         function abrirModalCotizacion() {
             document.getElementById('cotModo').value = 'crear';
@@ -991,7 +975,6 @@
             document.getElementById('cotTipoMaterial').value = '';
             document.getElementById('cotUbicacion').value = '';
             document.getElementById('cotDestinoFinal').value = '';
-            document.getElementById('cotKmEstimado').value = '';
             document.getElementById('cotTipoPago').value = '';
             document.getElementById('cotMonto').value = '';
             document.getElementById('cotEstado').value = 'En Cotización';
@@ -1026,7 +1009,6 @@
             document.getElementById('cotTipoMaterial').value = cot.tipo_material || '';
             document.getElementById('cotUbicacion').value = cot.ubicacion || '';
             document.getElementById('cotDestinoFinal').value = cot.destino || '';
-            document.getElementById('cotKmEstimado').value = cot.km_estimado || '';
             document.getElementById('cotTipoPago').value = cot.tipo_pago || '';
             document.getElementById('cotMonto').value = cot.monto || '';
             document.getElementById('cotEstado').value = cot.estado || 'En Cotización';
@@ -1046,10 +1028,11 @@
 
             fotoBase64Actual = null;
             document.getElementById('cotFotoFile').value = '';
+            resetearCajaFotoCotizacion();
             if (cot.foto_url) {
                 fotoUrlEnEdicion = cot.foto_url;
-                document.getElementById('cotFotoPreview').src = cot.foto_url;
-                document.getElementById('cotFotoNombre').textContent = 'Foto actual';
+                document.getElementById('cotFotoPreview').src = transformarUrlImagen(cot.foto_url);
+                document.getElementById('cotFotoNombre').textContent = 'Foto actual (clic para ampliar)';
                 document.getElementById('cotFotoPreviewWrap').classList.remove('hidden');
             } else {
                 fotoUrlEnEdicion = null;
@@ -1060,6 +1043,12 @@
         }
 
 
+        // Reconstruye el <img> de la caja de foto (por si un error previo lo reemplazó por texto)
+        function resetearCajaFotoCotizacion() {
+            document.getElementById('cotFotoImgBox').innerHTML =
+                '<img id="cotFotoPreview" onclick="verImagenCompleta(this.src)" onerror="manejarErrorImagen(this, \'cotFotoImgBox\')" class="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-80" title="Clic para ver en tamaño completo">';
+        }
+
         function previsualizarFoto(event) {
             const file = event.target.files[0];
             if (!file) { quitarFoto(); return; }
@@ -1068,6 +1057,7 @@
                 event.target.value = '';
                 return;
             }
+            resetearCajaFotoCotizacion();
             const reader = new FileReader();
             reader.onload = function (e) {
                 fotoBase64Actual = { base64: e.target.result, nombre: file.name, mime: file.type };
@@ -1084,6 +1074,7 @@
             fotoUrlEnEdicion = null;
             document.getElementById('cotFotoFile').value = '';
             document.getElementById('cotFotoPreviewWrap').classList.add('hidden');
+            resetearCajaFotoCotizacion();
         }
 
         function hhmmAMinutos(t) {
@@ -1142,6 +1133,9 @@
             document.getElementById('detCliente').textContent = cot.cliente || '';
             document.getElementById('detEstadoBadge').textContent = cot.estado || '';
             document.getElementById('detEstadoBadge').className = 'text-xs px-2 py-1 rounded-full font-medium ' + (ESTILO_ESTADO_BADGE[cot.estado] || 'bg-slate-100 text-slate-600');
+            const facturado = (cot.facturado === 'Sí' || cot.facturado === 'Si');
+            document.getElementById('detFacturadoBadge').textContent = 'Facturado: ' + (facturado ? 'Sí' : 'No');
+            document.getElementById('detFacturadoBadge').className = 'text-[10px] px-2 py-0.5 rounded-full font-medium ' + (facturado ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500');
             document.getElementById('detUbicacion').textContent = cot.ubicacion || 'Sin ubicación registrada';
             document.getElementById('detDescripcion').textContent = cot.descripcion || '-';
             const cargaTexto = [cot.peso_aprox ? `${cot.peso_aprox} TN` : '', cot.volumen_aprox ? `${cot.volumen_aprox} M3` : ''].filter(Boolean).join(' / ');
@@ -1175,7 +1169,9 @@
 
             const fotoWrap = document.getElementById('detFotoWrap');
             if (cot.foto_url) {
-                document.getElementById('detFoto').src = cot.foto_url;
+                document.getElementById('detFotoImgBox').innerHTML =
+                    '<img id="detFoto" onclick="verImagenCompleta(this.src)" onerror="manejarErrorImagen(this, \'detFotoImgBox\')" class="w-full rounded-lg border border-slate-200 cursor-pointer hover:opacity-90" title="Clic para ver en tamaño completo">';
+                document.getElementById('detFoto').src = transformarUrlImagen(cot.foto_url);
                 fotoWrap.classList.remove('hidden');
             } else {
                 fotoWrap.classList.add('hidden');
@@ -1199,54 +1195,33 @@
             openModal('modalDetalleServicio');
         }
 
-        function renderizarCalendario() {
-            const cont = document.getElementById('calendarioContenedor');
-            const vacio = document.getElementById('calendarioVacio');
-            const filtro = document.getElementById('filtroVehiculoProgramacion');
-            if (!cont || !filtro) return;
+        const ESTILO_ESTADO_CALENDARIO = {
+            'En Cotización': { pill: 'bg-amber-100 text-amber-700 border border-amber-200', barra: 'bg-amber-300', tentativo: true },
+            'Programado':    { pill: 'bg-blue-50 text-blue-700 border border-blue-100',      barra: 'bg-blue-500',   tentativo: false },
+            'En Ejecución':  { pill: 'bg-orange-50 text-orange-700 border border-orange-100', barra: 'bg-orange-500', tentativo: false },
+            'Completado':    { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-100', barra: 'bg-emerald-500', tentativo: false },
+            'Rechazada':     { pill: 'bg-red-50 text-red-700 border border-red-100',         barra: 'bg-red-400',    tentativo: false }
+        };
+        const ESTADOS_CERRADOS = ['Completado', 'Rechazada'];
 
-            const serviciosPropios = cotizacionesCache.filter(servicioAsignadoAUsuarioActual);
-
-            const vehiculosConServicio = [...new Set(serviciosPropios.filter(c => c.vehiculo_asignado).map(c => c.vehiculo_asignado))].sort();
-            const seleccionActual = filtro.value;
-            filtro.innerHTML = '<option value="">Todos los vehículos</option>' +
-                vehiculosConServicio.map(v => `<option value="${v}">${v}</option>`).join('');
-            filtro.value = vehiculosConServicio.includes(seleccionActual) ? seleccionActual : '';
-
-            let servicios = serviciosPropios.filter(c => c.fecha_programada);
-            if (filtro.value) servicios = servicios.filter(c => c.vehiculo_asignado === filtro.value);
-
-            if (servicios.length === 0) {
-                cont.innerHTML = '';
-                vacio.classList.remove('hidden');
-                return;
-            }
-            vacio.classList.add('hidden');
-
-            const ESTILO_ESTADO = {
-                'En Cotización': { pill: 'bg-amber-100 text-amber-700 border border-amber-200', barra: 'bg-amber-300', tentativo: true },
-                'Programado':    { pill: 'bg-blue-50 text-blue-700 border border-blue-100',      barra: 'bg-blue-500',   tentativo: false },
-                'En Ejecución':  { pill: 'bg-orange-50 text-orange-700 border border-orange-100', barra: 'bg-orange-500', tentativo: false },
-                'Completado':    { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-100', barra: 'bg-emerald-500', tentativo: false },
-                'Rechazada':     { pill: 'bg-red-50 text-red-700 border border-red-100',         barra: 'bg-red-400',    tentativo: false }
-            };
+        // Construye las tarjetas agrupadas por fecha (ascendente) para una lista de servicios ya filtrada
+        function construirTarjetasPorFecha(servicios) {
             const estiloDefault = { pill: 'bg-slate-100 text-slate-600 border border-slate-200', barra: 'bg-slate-300', tentativo: false };
-
             const porFecha = {};
             servicios.forEach(s => {
                 if (!porFecha[s.fecha_programada]) porFecha[s.fecha_programada] = [];
                 porFecha[s.fecha_programada].push(s);
             });
-            const fechasOrdenadas = Object.keys(porFecha).sort();
+            const fechasOrdenadas = Object.keys(porFecha).sort(); // ascendente: más próxima primero
             const hoyStr = new Date().toISOString().substring(0, 10);
 
-            cont.innerHTML = fechasOrdenadas.map(fecha => {
+            return fechasOrdenadas.map(fecha => {
                 const items = porFecha[fecha].slice().sort((a, b) => (a.hora_inicio || '').localeCompare(b.hora_inicio || ''));
                 const fechaLegible = new Date(fecha + 'T00:00:00').toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 const esHoy = fecha === hoyStr;
 
                 const filas = items.map(s => {
-                    const estilo = ESTILO_ESTADO[s.estado] || estiloDefault;
+                    const estilo = ESTILO_ESTADO_CALENDARIO[s.estado] || estiloDefault;
                     const horario = (s.hora_inicio && s.hora_fin) ? `${s.hora_inicio} – ${s.hora_fin}` : (s.hora_inicio || s.hora_fin || 'Sin horario');
                     const etiquetaTentativo = estilo.tentativo
                         ? `<span class="text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Tentativo</span>`
@@ -1285,6 +1260,47 @@
                     <div class="p-2.5 space-y-2">${filas}</div>
                 </div>`;
             }).join('');
+        }
+
+        function renderizarCalendario() {
+            const cont = document.getElementById('calendarioContenedor');
+            const vacio = document.getElementById('calendarioVacio');
+            const filtro = document.getElementById('filtroVehiculoProgramacion');
+            const filtroEstado = document.getElementById('filtroEstadoProgramacion');
+            if (!cont || !filtro || !filtroEstado) return;
+
+            const serviciosPropios = cotizacionesCache.filter(servicioAsignadoAUsuarioActual);
+
+            const vehiculosConServicio = [...new Set(serviciosPropios.filter(c => c.vehiculo_asignado).map(c => c.vehiculo_asignado))].sort();
+            const seleccionActual = filtro.value;
+            filtro.innerHTML = '<option value="">Todos los vehículos</option>' +
+                vehiculosConServicio.map(v => `<option value="${v}">${v}</option>`).join('');
+            filtro.value = vehiculosConServicio.includes(seleccionActual) ? seleccionActual : '';
+
+            let servicios = serviciosPropios.filter(c => c.fecha_programada);
+            if (filtro.value) servicios = servicios.filter(c => c.vehiculo_asignado === filtro.value);
+            if (filtroEstado.value) servicios = servicios.filter(c => c.estado === filtroEstado.value);
+
+            if (servicios.length === 0) {
+                cont.innerHTML = '';
+                vacio.classList.remove('hidden');
+                return;
+            }
+            vacio.classList.add('hidden');
+
+            // Los servicios activos/próximos van primero (orden ascendente por fecha);
+            // los completados o rechazados se envían al final, también ascendente.
+            const activos = servicios.filter(s => !ESTADOS_CERRADOS.includes(s.estado));
+            const cerrados = servicios.filter(s => ESTADOS_CERRADOS.includes(s.estado));
+
+            let html = construirTarjetasPorFecha(activos);
+            if (cerrados.length > 0) {
+                html += `<div class="flex items-center gap-2 pt-2 pb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Completados / Rechazados</span>
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                </div>` + construirTarjetasPorFecha(cerrados);
+            }
+            cont.innerHTML = html;
         }
 
         // ---------- Dashboard de KPIs (Lobby, solo Admin/Supervisor) ----------
@@ -1386,10 +1402,6 @@
                     'Rechazada': 'bg-red-50 text-red-700 border border-red-100'
                 };
                 cotizacionesCache.forEach(cot => {
-                    const facturado = (cot.facturado === 'Sí' || cot.facturado === 'Si');
-                    const badgeFacturado = facturado
-                        ? `<span class="bg-emerald-50 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">Sí</span>`
-                        : `<span class="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-full font-medium">No</span>`;
                     const horario = (cot.hora_inicio && cot.hora_fin) ? `${cot.hora_inicio} - ${cot.hora_fin}` : (cot.hora_inicio || cot.hora_fin || '-');
                     const claseEstado = coloresEstado[cot.estado] || 'bg-purple-50 text-purple-700 border border-purple-100';
                     tbody.innerHTML += `<tr class="hover:bg-slate-50">
@@ -1397,7 +1409,6 @@
                         <td class="p-3 font-semibold">${cot.cliente || ''}</td>
                         <td class="p-3 text-xs text-slate-600">${cot.tipo_servicio || '-'}</td>
                         <td class="p-3">${cot.descripcion || ''}</td>
-                        <td class="p-3">${cot.peso_aprox || ''}</td>
                         <td class="p-3">${cot.tipo_material || ''}</td>
                         <td class="p-3">${cot.tipo_pago || ''}</td>
                         <td class="p-3 font-mono">S/. ${cot.monto || '0.00'}</td>
@@ -1406,8 +1417,10 @@
                         <td class="p-3">${horario}</td>
                         <td class="p-3 text-xs text-slate-600">${cot.conductor_asignado || '-'}</td>
                         <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${cot.estado || ''}</span></td>
-                        <td class="p-3">${badgeFacturado}</td>
-                        <td class="p-3"><button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button></td>
+                        <td class="p-3 whitespace-nowrap">
+                            <button onclick="mostrarDetalleServicio('${cot.id_cotizacion}')" class="text-slate-600 hover:underline text-xs font-medium mr-2"><i class="fa-solid fa-eye mr-1"></i>Ver Detalles</button>
+                            <button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
+                        </td>
                     </tr>`;
 
                     if (cot.estado === 'Completado' || cot.estado === 'Programado') {
@@ -1511,14 +1524,13 @@
                     etapas.push(`Llegada Punto ${i + 1}`);
                     etapas.push(`Salida Punto ${i + 1}`);
                 });
-                if (cot.destino) {
-                    etapas.push('Llegada a Destino');
-                    etapas.push('Salida de Destino');
-                }
+                etapas.push('Llegada a Destino Final');
                 etapas.push('Retorno Base MEJ');
                 return etapas;
             }
-            return ['Salida Base MEJ', 'Llegada a Cliente', 'Salida de Cliente', 'Retorno Base MEJ'];
+            // Secuencia estándar: incluye la parada obligatoria en el destino final
+            // (relleno sanitario, relleno de seguridad o planta de valorización) antes del retorno.
+            return ['Salida Base MEJ', 'Llegada a Cliente', 'Salida de Cliente', 'Llegada a Destino Final', 'Retorno Base MEJ'];
         }
 
         function abrirModalBitacora() {
@@ -1632,7 +1644,7 @@
                 data.tipo_material = document.getElementById('cotTipoMaterial').value;
                 data.ubicacion = document.getElementById('cotUbicacion').value;
                 data.destino = document.getElementById('cotDestinoFinal').value;
-                data.km_estimado = document.getElementById('cotKmEstimado').value;
+                data.km_estimado = ''; // sección "Ruta y Distancia" removida temporalmente de la UI
                 data.tipo_pago = document.getElementById('cotTipoPago').value;
                 data.monto = document.getElementById('cotMonto').value;
                 data.estado = document.getElementById('cotEstado').value;
