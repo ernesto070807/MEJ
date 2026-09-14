@@ -4,8 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma MEJ - Gestión de Servicios y Flota</title>
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2314702c' d='M12 2 4 6v6c0 5.25 3.5 9.74 8 11 4.5-1.26 8-5.75 8-11V6l-8-4z'/%3E%3Cpath fill='%23ffffff' d='M12 5.2 6.5 8v4c0 4.05 2.5 7.5 5.5 8.6 3-1.1 5.5-4.55 5.5-8.6V8L12 5.2z'/%3E%3Cpath fill='%2314702c' d='m9.2 8.4-.9 2.3 1.9 1.5-2.4.3-.4 2.4 1.6-1.8 1.9 1.3-.7-2.3 2-1.2-2.4-.2z'/%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Paleta institucional MEJ & Solutions Service S.A.C. — Verde corporativo
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mej: {
+                            50: '#eaf7ee', 100: '#d1edd9', 200: '#a6dbb7',
+                            300: '#72c290', 400: '#43a86e', 500: '#28a745',
+                            600: '#1e8a3a', 700: '#14702c', 800: '#125b26',
+                            900: '#0f4a20'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -14,27 +31,28 @@
         .toast { animation: toastIn .25s ease-out; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
+<body class="bg-[#F8FAFC] text-slate-800 font-sans">
 
     <!-- PANTALLA DE LOGIN -->
-    <div id="loginOverlay" class="fixed inset-0 z-[100] bg-gradient-to-br from-blue-900 to-slate-800 flex items-center justify-center p-4">
+    <div id="loginOverlay" class="fixed inset-0 z-[100] bg-gradient-to-br from-mej-800 to-slate-800 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8">
             <div class="flex flex-col items-center mb-6">
-                <div class="bg-blue-900 text-white font-bold px-4 py-2 rounded-lg text-xl tracking-wider mb-3">MEJ</div>
+                <img src="data:image/png;base64,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" alt="MEJ & Solutions Service S.A.C." class="h-14 mb-3 object-contain">
                 <h1 class="text-lg font-bold text-slate-900 text-center">Sistema de Control Operativo</h1>
                 <p class="text-xs text-slate-500 text-center">MEJ Solutions & Services S.A.C.</p>
             </div>
+            <p id="loginInactividadMsg" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3"><i class="fa-solid fa-clock mr-1"></i>Tu sesión anterior se cerró automáticamente por inactividad. Vuelve a iniciar sesión.</p>
             <form onsubmit="iniciarSesion(event)" class="space-y-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Usuario / ID</label>
-                    <input type="text" id="loginUsuario" required autocomplete="username" placeholder="Ej: ADMI1, OPERA1" class="w-full text-sm border rounded-lg px-3 py-2 uppercase">
+                    <input type="text" id="loginUsuario" required autocomplete="username" placeholder="Ej: ADMI1, OPERA1" class="w-full text-sm border rounded-lg px-3 py-2 uppercase focus:ring-2 focus:ring-mej-500 focus:border-mej-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
-                    <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••" class="w-full text-sm border rounded-lg px-3 py-2">
+                    <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••" class="w-full text-sm border rounded-lg px-3 py-2 focus:ring-2 focus:ring-mej-500 focus:border-mej-500 outline-none">
                 </div>
                 <p id="loginError" class="hidden text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></p>
-                <button type="submit" id="btnLogin" class="w-full bg-blue-900 hover:bg-blue-800 text-white text-sm font-medium py-2.5 rounded-lg flex items-center justify-center gap-2">
+                <button type="submit" id="btnLogin" class="w-full bg-mej-700 hover:bg-mej-800 text-white text-sm font-medium py-2.5 rounded-lg flex items-center justify-center gap-2">
                     <span id="btnLoginTexto">Ingresar</span>
                     <i id="btnLoginSpinner" class="fa-solid fa-circle-notch spinner hidden"></i>
                 </button>
@@ -49,7 +67,7 @@
     <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('lobby')">
-                <div class="bg-blue-900 text-white font-bold px-3 py-2 rounded-lg text-lg tracking-wider">MEJ</div>
+                <div class="bg-mej-700 text-white font-bold px-3 py-2 rounded-lg text-lg tracking-wider">MEJ</div>
                 <div>
                     <h1 class="text-xl font-bold text-slate-900">Sistema de Control Operativo</h1>
                     <p class="text-xs text-slate-500">MEJ Solutions & Services S.A.C.</p>
@@ -57,7 +75,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <nav class="hidden md:flex space-x-1">
-                    <button onclick="switchTab('lobby')" id="navLobby" class="px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700"><i class="fa-solid fa-house mr-1"></i> Lobby</button>
+                    <button onclick="switchTab('lobby')" id="navLobby" class="px-3 py-2 text-sm font-medium rounded-lg bg-mej-50 text-mej-700"><i class="fa-solid fa-house mr-1"></i> Lobby</button>
                     <button onclick="switchTab('clientes')" id="navClientes" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-users mr-1"></i> Clientes</button>
                     <button onclick="switchTab('cotizaciones')" id="navCotizaciones" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Cotizaciones</button>
                     <button onclick="switchTab('programacion')" id="navProgramacion" class="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-calendar-days mr-1"></i> Programación</button>
@@ -81,7 +99,7 @@
 
         <!-- LOBBY -->
         <div id="secLobby" class="space-y-6">
-            <div class="bg-gradient-to-r from-blue-900 to-slate-800 text-white p-8 rounded-2xl shadow-lg">
+            <div class="bg-gradient-to-r from-mej-800 to-slate-800 text-white p-8 rounded-2xl shadow-lg">
                 <h2 class="text-3xl font-bold">Panel de control operativo MEJ</h2>
             </div>
 
@@ -258,7 +276,7 @@
     </button>
 
     <!-- BOTÓN FLOTANTE "VOLVER AL LOBBY" -->
-    <button id="btnVolverLobby" onclick="switchTab('lobby')" class="hidden fixed bottom-6 right-6 z-40 bg-blue-900 hover:bg-blue-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl transition" title="Regresar al menú principal (Lobby)">
+    <button id="btnVolverLobby" onclick="switchTab('lobby')" class="hidden fixed bottom-6 right-6 z-40 bg-mej-700 hover:bg-mej-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl transition" title="Regresar al menú principal (Lobby)">
         <i class="fa-solid fa-house"></i>
     </button>
 
@@ -697,7 +715,30 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             restaurarSesion();
+            configurarControlDeInactividad();
         });
+
+        // ---------- Cierre de sesión por inactividad (60 minutos) ----------
+        const LIMITE_INACTIVIDAD_MS = 60 * 60 * 1000; // 1 hora
+        const CLAVE_SESION_EXPIRADA = 'mej_sesion_expirada';
+        let temporizadorInactividad = null;
+
+        function configurarControlDeInactividad() {
+            ['click', 'mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evento => {
+                document.addEventListener(evento, reiniciarTemporizadorInactividad, { passive: true });
+            });
+        }
+
+        function reiniciarTemporizadorInactividad() {
+            if (!sesionActual) return; // sin sesión activa, no hay nada que vigilar
+            clearTimeout(temporizadorInactividad);
+            temporizadorInactividad = setTimeout(cerrarSesionPorInactividad, LIMITE_INACTIVIDAD_MS);
+        }
+
+        function cerrarSesionPorInactividad() {
+            localStorage.setItem(CLAVE_SESION_EXPIRADA, '1');
+            cerrarSesion();
+        }
 
         function restaurarSesion() {
             try {
@@ -710,6 +751,14 @@
             } catch (e) {}
             document.getElementById('loginOverlay').classList.remove('hidden');
             document.getElementById('appShell').classList.add('hidden');
+            mostrarAvisoInactividadSiCorresponde();
+        }
+
+        function mostrarAvisoInactividadSiCorresponde() {
+            if (localStorage.getItem(CLAVE_SESION_EXPIRADA) === '1') {
+                localStorage.removeItem(CLAVE_SESION_EXPIRADA);
+                document.getElementById('loginInactividadMsg').classList.remove('hidden');
+            }
         }
 
         function mostrarApp() {
@@ -719,6 +768,7 @@
             document.getElementById('sesionRol').textContent = sesionActual.rol || '';
             aplicarPermisosPorRol(sesionActual.rol);
             cargarDatos();
+            reiniciarTemporizadorInactividad();
         }
 
         async function iniciarSesion(event) {
@@ -742,6 +792,7 @@
 
                 sesionActual = resp.usuario;
                 localStorage.setItem(CLAVE_SESION, JSON.stringify(sesionActual));
+                document.getElementById('loginInactividadMsg').classList.add('hidden');
                 mostrarApp();
             } catch (err) {
                 errorBox.textContent = err.message;
@@ -754,6 +805,7 @@
         }
 
         function cerrarSesion() {
+            clearTimeout(temporizadorInactividad);
             localStorage.removeItem(CLAVE_SESION);
             sesionActual = null;
             location.reload();
@@ -799,7 +851,7 @@
             });
             document.getElementById('sec' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
             let activeNav = document.getElementById('nav' + tab.charAt(0).toUpperCase() + tab.slice(1));
-            if (activeNav) activeNav.className = "px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700";
+            if (activeNav) activeNav.className = "px-3 py-2 text-sm font-medium rounded-lg bg-mej-50 text-mej-700";
 
             const btnVolver = document.getElementById('btnVolverLobby');
             if (tab === 'lobby' || esOperadorActual()) btnVolver.classList.add('hidden');
