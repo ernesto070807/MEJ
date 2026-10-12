@@ -55,10 +55,24 @@
       .mej-doc-dato-label { font-weight:bold; color:#475569; }
       .mej-doc-dato-valor { overflow-wrap:anywhere; }
       .mej-doc-caja { border:1px solid #cbd5e1; border-radius:2mm; padding:3mm 4mm; background:#f8fbf9; margin:3mm 0; }
-      .mej-doc-foto-carga { width:100%; height:31mm; border:1px dashed #cbd5e1; border-radius:2mm; display:flex; justify-content:center; align-items:center; color:#64748b; background:#f8fafc; overflow:hidden; }
-      .mej-doc-foto-carga img { width:100%; height:100%; object-fit:contain; }
-      .mej-doc-foto-unidad { width:100%; height:56mm; border:1px solid #cbd5e1; display:flex; align-items:center; justify-content:center; background:#f8fafc; color:#64748b; overflow:hidden; }
-      .mej-doc-foto-unidad img { width:100%; height:100%; object-fit:contain; }
+      /* Las fotos respetan SIEMPRE su relación de aspecto original.
+         El contenedor delimita el espacio A4; la imagen NO rellena ambos ejes. */
+      .mej-doc-foto-carga {
+        width:100%; height:49mm; border:1px dashed #cbd5e1; border-radius:2mm;
+        display:flex; justify-content:center; align-items:center; color:#64748b;
+        background:#fff; overflow:hidden; padding:1.5mm;
+      }
+      .mej-doc-foto-unidad {
+        width:100%; height:56mm; border:1px solid #cbd5e1;
+        display:flex; align-items:center; justify-content:center;
+        background:#fff; color:#64748b; overflow:hidden; padding:1.5mm;
+      }
+      .mej-doc-foto-carga img, .mej-doc-foto-unidad img {
+        display:block; width:auto; height:auto;
+        max-width:100% !important; max-height:100% !important;
+        min-width:0; min-height:0; object-fit:contain !important;
+        object-position:center center; flex:none; margin:auto;
+      }
       .mej-doc-tabla { width:100%; border-collapse:collapse; table-layout:fixed; font-size:9.5pt; margin-top:3mm; }
       .mej-doc-tabla th, .mej-doc-tabla td { border:1px solid #b7c4bc; padding:3mm 2.5mm; vertical-align:middle; overflow-wrap:anywhere; }
       .mej-doc-tabla th { background:#e8f5eb; color:#14532d; font-weight:bold; }
@@ -765,7 +779,7 @@
 
     <!-- SCRIPTS DE LÓGICA -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3CRdDvjlmw3KMhJacgogAoD6jp5phqyIXfHSdffxnnf7aoSeWpuE77u7yM67eUVnp/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz-DjxpD9oG-sH9QxP-l4h2U4GsEXGzr79pjrUax9LdvQVQyzCSxbnFdRP2_aQ4bX8B/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
@@ -2097,9 +2111,23 @@
         }
         function mejImagenOPlaceholder(url, leyenda, tipo) {
             if (url && /^data:image\/(png|jpeg|webp);base64,/.test(url)) {
-                return `<div class="${tipo}"><img alt="${mejTextoSeguro(leyenda)}" src="${url}"></div>`;
+                return `<div class="${tipo}"><img alt="${mejTextoSeguro(leyenda)}" src="${url}" loading="eager" decoding="sync" onload="mejAjustarImagenDocumento(this)" style="width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;object-position:center;"></div>`;
             }
             return `<div class="${tipo}"><span>${mejTextoSeguro(leyenda)} no disponible</span></div>`;
+        }
+        // Ajusta el tamaño real usando las dimensiones NATURALES de la imagen.
+        // Evita distorsiones cuando el navegador o el motor de PDF fuerzan el contenedor.
+        function mejAjustarImagenDocumento(img) {
+            if (!img || !img.naturalWidth || !img.naturalHeight) return;
+            const caja = img.parentElement;
+            if (!caja || !caja.clientWidth || !caja.clientHeight) return;
+            const estilo = getComputedStyle(caja);
+            const anchoDisponible = caja.clientWidth - parseFloat(estilo.paddingLeft || 0) - parseFloat(estilo.paddingRight || 0);
+            const altoDisponible = caja.clientHeight - parseFloat(estilo.paddingTop || 0) - parseFloat(estilo.paddingBottom || 0);
+            if (anchoDisponible <= 0 || altoDisponible <= 0) return;
+            const factor = Math.min(anchoDisponible / img.naturalWidth, altoDisponible / img.naturalHeight);
+            img.style.width = Math.max(1, Math.floor(img.naturalWidth * factor)) + 'px';
+            img.style.height = Math.max(1, Math.floor(img.naturalHeight * factor)) + 'px';
         }
         // Diseñada a partir de las tres páginas de Plantilla_cotización.docx.
         function renderizarDocumentoHtml(paquete) {
@@ -2205,6 +2233,8 @@
                 </div>
               </main>${mejPie(3)}</section>`;
             document.getElementById('mejDocumentoVista').innerHTML = pagina1 + pagina2 + pagina3;
+            document.querySelectorAll('#mejDocumentoVista .mej-doc-foto-carga img, #mejDocumentoVista .mej-doc-foto-unidad img')
+                .forEach(img => { if (img.complete) mejAjustarImagenDocumento(img); });
         }
 
         async function solicitarPdfCotizacion(idCot, accion, extras = {}) {
@@ -2237,6 +2267,8 @@
             document.getElementById('pdfFrame').classList.add('hidden');
             const cont = document.getElementById('pdfContenedorHtml');
             cont.classList.remove('hidden', 'mej-pdf-oculto');
+            document.querySelectorAll('#mejDocumentoVista .mej-doc-foto-carga img, #mejDocumentoVista .mej-doc-foto-unidad img')
+                .forEach(mejAjustarImagenDocumento);
         }
 
         async function previsualizarPdfCotizacion(idCot = pdfCotizacionActual) {
@@ -2292,6 +2324,9 @@
             await Promise.all(imagenes.map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
                 img.addEventListener('load',resolve,{once:true}); img.addEventListener('error',resolve,{once:true});
             })));
+            // Asegura que html2canvas capture el mismo tamaño proporcional de la vista previa.
+            document.querySelectorAll('#mejDocumentoVista .mej-doc-foto-carga img, #mejDocumentoVista .mej-doc-foto-unidad img')
+                .forEach(mejAjustarImagenDocumento);
             const pdf = new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
             pdf.setProperties({title:'Cotización ' + mejPdfDatos.cotizacion.id_cotizacion,author:'MEJ & Solutions Service S.A.C.',subject:'Cotización comercial'});
             for (let i = 0; i < paginas.length; i++) {
