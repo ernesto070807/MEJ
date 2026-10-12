@@ -182,7 +182,7 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
                     <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
                         <p class="text-3xl font-bold text-amber-700" id="kpiEnCotizacion">0</p>
-                        <p class="text-xs font-semibold text-amber-700 uppercase mt-1">En Cotización</p>
+                        <p class="text-xs font-semibold text-amber-700 uppercase mt-1">En revisión interna</p>
                     </div>
                     <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
                         <p class="text-3xl font-bold text-blue-700" id="kpiProgramado">0</p>
@@ -190,11 +190,11 @@
                     </div>
                     <div class="bg-orange-50 border border-orange-100 rounded-xl p-4">
                         <p class="text-3xl font-bold text-orange-700" id="kpiEnEjecucion">0</p>
-                        <p class="text-xs font-semibold text-orange-700 uppercase mt-1">En Ejecución</p>
+                        <p class="text-xs font-semibold text-orange-700 uppercase mt-1">En ejecución</p>
                     </div>
                     <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
                         <p class="text-3xl font-bold text-emerald-700" id="kpiCompletado">0</p>
-                        <p class="text-xs font-semibold text-emerald-700 uppercase mt-1">Completados</p>
+                        <p class="text-xs font-semibold text-emerald-700 uppercase mt-1">Servicio concluido</p>
                     </div>
                 </div>
                 <div class="w-full h-4 rounded-full overflow-hidden flex bg-slate-100" id="dashboardBarra"></div>
@@ -256,11 +256,15 @@
                 <div class="flex gap-2 w-full md:w-auto">
                     <select id="filtroEstadoCotizaciones" onchange="renderizarTablaCotizaciones()" class="text-sm border rounded-lg px-3 py-2 bg-white flex-1 md:w-56">
                         <option value="">Todos los estados</option>
-                        <option value="En Cotización">Pendientes de aprobación</option>
-                        <option value="Programado">Programados</option>
-                        <option value="En Ejecución">En ruta</option>
-                        <option value="Completado">Completados</option>
-                        <option value="Rechazada">Rechazadas</option>
+                        <option value="En revisión interna">1. En revisión interna</option>
+                        <option value="Aprobado internamente">2. Aprobado internamente</option>
+                        <option value="Enviado al cliente">3. Enviado al cliente</option>
+                        <option value="Aceptado por el cliente">4. Aceptado por el cliente</option>
+                        <option value="Programado">5. Programado</option>
+                        <option value="En ejecución">6. En ejecución</option>
+                        <option value="Servicio concluido">7. Servicio concluido</option>
+                        <option value="Por facturar">8. Por facturar</option>
+                        <option value="Rechazada">Rechazada</option>
                     </select>
                     <button id="btnNuevaCotizacion" onclick="abrirModalCotizacion()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Nueva Cotización</button>
                 </div>
@@ -283,10 +287,15 @@
                 <div class="flex gap-2 w-full md:w-auto">
                     <select id="filtroEstadoProgramacion" onchange="renderizarCalendario()" class="text-sm border rounded-lg px-3 py-2 bg-white flex-1 md:w-48">
                         <option value="">Todos los estados</option>
-                        <option value="En Cotización">En Cotización</option>
-                        <option value="Programado">Programados</option>
-                        <option value="En Ejecución">En Ejecución</option>
-                        <option value="Completado">Completados</option>
+                        <option value="En revisión interna">1. En revisión interna</option>
+                        <option value="Aprobado internamente">2. Aprobado internamente</option>
+                        <option value="Enviado al cliente">3. Enviado al cliente</option>
+                        <option value="Aceptado por el cliente">4. Aceptado por el cliente</option>
+                        <option value="Programado">5. Programado</option>
+                        <option value="En ejecución">6. En ejecución</option>
+                        <option value="Servicio concluido">7. Servicio concluido</option>
+                        <option value="Por facturar">8. Por facturar</option>
+                        <option value="Rechazada">Rechazada</option>
                     </select>
                     <select id="filtroVehiculoProgramacion" onchange="renderizarCalendario()" class="text-sm border rounded-lg px-3 py-2 bg-white flex-1 md:w-48">
                         <option value="">Todos los vehículos</option>
@@ -336,7 +345,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-xl font-bold text-slate-900">Módulo de Facturación</h2>
-                    <p class="text-xs text-slate-500">Comprobantes vinculados a cotizaciones en estado Programado o Completado.</p>
+                    <p class="text-xs text-slate-500">Comprobantes vinculados a servicios Programados, concluidos o por facturar.</p>
                 </div>
                 <button onclick="openModal('modalFacturacion')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow transition"><i class="fa-solid fa-file-invoice mr-1"></i> Emitir Factura</button>
             </div>
@@ -517,22 +526,27 @@
                         <p class="text-[10px] text-slate-400 mt-1">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar varios.</p>
                     </div>
                 </div>
-                <p id="cotProgramacionRestringidaAviso" class="hidden text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2"><i class="fa-solid fa-lock mr-1"></i>La programación operativa (fecha, vehículo, horario y personal) solo puede completarla Administración o Supervisión, al momento de aprobar la cotización.</p>
+                <p id="cotProgramacionRestringidaAviso" class="hidden text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2"><i class="fa-solid fa-lock mr-1"></i>Ventas puede preasignar fecha, vehículo, horario y personal. La aprobación y programación definitiva corresponden a Administración/Supervisión.</p>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Estado</label>
-                    <select id="cotEstado" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
-                        <option value="En Cotización">En Cotización (pendiente de aprobación)</option>
-                        <option value="Programado">Programado</option>
-                        <option value="En Ejecución">En Ejecución</option>
-                        <option value="Completado">Completado</option>
+                    <select id="cotEstado" onchange="aplicarRestriccionesFormularioCotizacion()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white">
+                        <option value="En revisión interna">1. En revisión interna</option>
+                        <option value="Aprobado internamente">2. Aprobado internamente</option>
+                        <option value="Enviado al cliente">3. Enviado al cliente</option>
+                        <option value="Aceptado por el cliente">4. Aceptado por el cliente</option>
+                        <option value="Programado">5. Programado</option>
+                        <option value="En ejecución">6. En ejecución</option>
+                        <option value="Servicio concluido">7. Servicio concluido</option>
+                        <option value="Por facturar">8. Por facturar</option>
                         <option value="Rechazada">Rechazada</option>
                     </select>
-                    <p id="cotEstadoRestringidoAviso" class="hidden text-[11px] text-slate-500 mt-1"><i class="fa-solid fa-lock mr-1"></i>Solo Administración o Supervisión pueden aprobar (cambiar el estado) una cotización.</p>
+                    <p id="cotEstadoRestringidoAviso" class="hidden text-[11px] text-slate-500 mt-1"><i class="fa-solid fa-lock mr-1"></i>Ventas preasigna los recursos y registra la cotización en revisión interna. Solo Administración/Supervisión cambia su estado.</p>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-2">
                     <button type="button" onclick="closeModal('modalCotizacion')" class="px-4 py-2 text-sm bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="button" id="btnAprobarRapidoModal" onclick="aprobarCotizacionRapido(document.getElementById('cotId').value)" class="hidden bg-mej-700 hover:bg-mej-800 px-3 py-2 rounded-lg text-sm font-medium text-white"><i class="fa-solid fa-check mr-1"></i>Aprobar cotización</button>
                     <button type="submit" id="btnGuardarCotizacion" class="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg flex items-center gap-2">
                         <span id="btnGuardarCotizacionTexto">Guardar Cotización</span>
                         <i id="btnGuardarCotizacionSpinner" class="fa-solid fa-circle-notch spinner hidden"></i>
@@ -612,7 +626,7 @@
             <h3 class="text-lg font-bold mb-4"><i class="fa-solid fa-route mr-2 text-indigo-600"></i>Registrar Etapa / KM</h3>
             <form onsubmit="guardarEtapaBitacora(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Servicio (Programado / En Ejecución)</label>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Servicio (Programado / En ejecución)</label>
                     <select id="bitCotizacion" required onchange="autocompletarBitacora()" class="w-full text-sm border rounded-lg px-3 py-2 bg-white"></select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
@@ -779,7 +793,7 @@
 
     <!-- SCRIPTS DE LÓGICA -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz-DjxpD9oG-sH9QxP-l4h2U4GsEXGzr79pjrUax9LdvQVQyzCSxbnFdRP2_aQ4bX8B/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzO2gmVCtngdey5qK2PvQmJerSN_UGpys9WHyvjDtQwNYopqm8Hn3uWfEFraztDH2P8/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
@@ -791,8 +805,65 @@
         let sesionActual = null;
         let pdfCotizacionActual = null;
         let urlBlobPdfActual = null;
-        const ESTADOS_OCUPAN_VEHICULO = ['Programado', 'En Ejecución'];
+        // Solo los servicios aprobados y en ruta bloquean recursos reales.
+        const ESTADOS_OCUPAN_VEHICULO = ['Programado', 'En ejecución', 'En Ejecución'];
+        const ESTADOS_MEJ = ['En revisión interna', 'Aprobado internamente', 'Enviado al cliente',
+            'Aceptado por el cliente', 'Programado', 'En ejecución',
+            'Servicio concluido', 'Por facturar', 'Rechazada'];
+        // NUNCA convertir los estados antiguos. Solo V2 usa el ciclo comercial nuevo.
+        function normalizarEstadoMEJ(valor) { return String(valor || '').trim(); }
+        function clasesEstadoMEJ(estado) {
+            const s=normalizarEstadoMEJ(estado);
+            if (s==='En revisión interna') return 'bg-amber-50 text-amber-700 border border-amber-200';
+            if (s==='Aprobado internamente') return 'bg-teal-50 text-teal-700 border border-teal-200';
+            if (s==='Enviado al cliente') return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+            if (s==='Aceptado por el cliente') return 'bg-cyan-50 text-cyan-700 border border-cyan-200';
+            if (s==='Programado') return 'bg-blue-50 text-blue-700 border border-blue-200';
+            if (s==='En ejecución' || s==='En Ejecución') return 'bg-orange-50 text-orange-700 border border-orange-200';
+            if (s==='Servicio concluido' || s==='Completado') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+            if (s==='Por facturar') return 'bg-violet-50 text-violet-700 border border-violet-200';
+            if (['Pendiente','En Cotización'].includes(s)) return 'bg-amber-50 text-amber-700 border border-amber-200';
+            if (s==='Aprobada') return 'bg-teal-50 text-teal-700 border border-teal-200';
+            return 'bg-red-50 text-red-700 border border-red-200';
+        }
+        // Lectura local de notificaciones por usuario (no altera la hoja Cotizaciones).
+        function claveLecturasCotMEJ() {
+            return 'mej_notificaciones_leidas_' + (sesionActual?.id_usuario || 'anonimo');
+        }
+        function idsLeidosCotMEJ() {
+            try {return JSON.parse(localStorage.getItem(claveLecturasCotMEJ()) || '[]');}
+            catch(_) {return [];}
+        }
+        function marcarLeidaCotMEJ(id) {
+            const leidas=new Set(idsLeidosCotMEJ());
+            leidas.add(id);
+            localStorage.setItem(claveLecturasCotMEJ(), JSON.stringify(Array.from(leidas)));
+            renderizarNotificaciones();
+        }
         const CLAVE_SESION = 'mej_sesion';
+        // Toda lectura se autentica; no enviamos la contraseña fuera del login.
+        function urlGetMEJ(accion) {
+            if (!sesionActual?.token) throw new Error('SESION_INVALIDA: Inicia sesión.');
+            return `${WEB_APP_URL}?action=${encodeURIComponent(accion)}&token=${encodeURIComponent(sesionActual.token)}`;
+        }
+        function responderErrorSesionMEJ(error) {
+            const mensaje=String(error?.message || error || '');
+            if (mensaje.includes('SESION_INVALIDA') || mensaje.includes('sesión vencida') ||
+                mensaje.includes('requiere sesión nueva')) {
+                localStorage.removeItem(CLAVE_SESION);
+                sesionActual=null;
+                mostrarToast('Tu sesión requiere un nuevo ingreso. Vuelve a iniciar sesión.', 'warning');
+                setTimeout(()=>location.reload(), 1800);
+                return true;
+            }
+            return false;
+        }
+        window.addEventListener('unhandledrejection', evento=>{
+            if (responderErrorSesionMEJ(evento.reason)) evento.preventDefault();
+        });
+        // Marcador V2: las cotizaciones existentes antes del cambio son históricas.
+        function esCotizacionV2MEJ(cot) { return String(cot?.flujo_version || '') === 'V2'; }
+
 
         function formatearFecha(valor) {
             if (!valor) return '';
@@ -824,14 +895,18 @@
         // Etiqueta amigable para mostrar en badges (el valor interno de "estado" no cambia,
         // solo el texto que ve el usuario en tablas, calendario y detalle).
         const ETIQUETAS_ESTADO = {
-            'En Cotización': 'Pendiente de aprobación',
+            'En revisión interna': 'En revisión interna',
+            'Aprobado internamente': 'Aprobado internamente',
+            'Enviado al cliente': 'Enviado al cliente',
+            'Aceptado por el cliente': 'Aceptado por el cliente',
             'Programado': 'Programado',
-            'En Ejecución': 'En ruta',
-            'Completado': 'Completado',
+            'En ejecución': 'En ejecución',
+            'Servicio concluido': 'Servicio concluido',
+            'Por facturar': 'Por facturar',
             'Rechazada': 'Rechazada'
         };
         function etiquetaEstado(estado) {
-            return ETIQUETAS_ESTADO[estado] || estado || '';
+            return ETIQUETAS_ESTADO[normalizarEstadoMEJ(estado)] || estado || '';
         }
 
         function sanearProgramacionCotizacion(cot) {
@@ -870,24 +945,32 @@
             cerrarSesion();
         }
 
-        function restaurarSesion() {
-            try {
-                const guardada = localStorage.getItem(CLAVE_SESION);
-                if (guardada) {
-                    sesionActual = JSON.parse(guardada);
-                    // Las sesiones previas a esta integración no poseen token PDF.
-                    if (!sesionActual || !sesionActual.token) {
-                        localStorage.removeItem(CLAVE_SESION);
-                        sesionActual = null;
-                        throw new Error('Vuelve a iniciar sesión para activar la nueva función PDF.');
-                    }
-                    mostrarApp();
-                    return;
-                }
-            } catch (e) {}
-            document.getElementById('loginOverlay').classList.remove('hidden');
+        async function restaurarSesion() {
             document.getElementById('appShell').classList.add('hidden');
-            mostrarAvisoInactividadSiCorresponde();
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            let almacenada=null;
+            try { almacenada=JSON.parse(localStorage.getItem(CLAVE_SESION)||'null'); }
+            catch(_) { localStorage.removeItem(CLAVE_SESION); }
+            // Las sesiones antiguas no contienen token V2 o fueron creadas en otra implementación.
+            if (!almacenada?.token || !almacenada.token.includes('.')) {
+                localStorage.removeItem(CLAVE_SESION);
+                mostrarAvisoInactividadSiCorresponde();
+                return;
+            }
+            try {
+                const res=await fetch(WEB_APP_URL, {method:'POST',body:JSON.stringify({
+                    tipo:'validar_sesion',token:almacenada.token
+                })});
+                const confirmado=await res.json();
+                if (confirmado.result!=='success') throw new Error(confirmado.message||'Sesión anterior no válida.');
+                sesionActual={...confirmado.usuario,token:almacenada.token};
+                localStorage.setItem(CLAVE_SESION,JSON.stringify(sesionActual));
+                mostrarApp();
+            } catch(_) {
+                sesionActual=null;
+                localStorage.removeItem(CLAVE_SESION);
+                mostrarAvisoInactividadSiCorresponde();
+            }
         }
 
         function mostrarAvisoInactividadSiCorresponde() {
@@ -925,6 +1008,7 @@
                 const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ tipo: 'login', usuario, password }) });
                 const resp = await res.json();
                 if (resp.result === 'error') throw new Error(resp.message || 'No se pudo iniciar sesión');
+                if (!resp.usuario?.token || !resp.usuario.token.includes('.')) throw new Error('El backend no es la nueva versión: publica Code.gs actualizado y vuelve a intentar.');
 
                 sesionActual = resp.usuario;
                 localStorage.setItem(CLAVE_SESION, JSON.stringify(sesionActual));
@@ -1086,7 +1170,7 @@
             document.getElementById('cliContacto').value = '';
             document.getElementById('cliCorreo').value = '';
             openModal('modalCliente');
-            fetch(`${WEB_APP_URL}?action=siguiente_id`)
+            fetch(urlGetMEJ('siguiente_id'))
                 .then(res => res.json())
                 .then(data => { document.getElementById('cliId').value = data.nextId; })
                 .catch(() => { document.getElementById('cliId').value = "CLI-001"; });
@@ -1192,27 +1276,40 @@
         // El campo km_estimado sigue existiendo en la hoja de Cotizaciones por compatibilidad,
         // simplemente ya no se recolecta desde este formulario.
 
-        // VENTAS: solo datos generales, foto, tipo de pago y monto propuesto.
-        // La Programación Operativa y el Estado quedan bloqueados para Admin/Supervisor.
+        // Estado de cotización histórico: se muestra TAL CUAL está en la BDD.
+        // El nuevo desplegable SOLO corresponde a registros creados con flujo_version=V2.
+        function configurarSelectEstadoCotMEJ(cot) {
+            const select=document.getElementById('cotEstado');
+            select.querySelectorAll('option[data-legacy="1"]').forEach(o=>o.remove());
+            if (cot && !esCotizacionV2MEJ(cot)) {
+                const original=String(cot.estado||'');
+                if (!Array.from(select.options).some(o=>o.value===original)) {
+                    const opcion=document.createElement('option');
+                    opcion.value=original; opcion.textContent='Histórico: ' + (original || 'Sin estado');
+                    opcion.dataset.legacy='1'; select.appendChild(opcion);
+                }
+                select.value=original;
+            } else if (!cot) select.value='En revisión interna';
+        }
         function aplicarRestriccionesFormularioCotizacion() {
-            const restringido = esVentasActual();
-
-            document.getElementById('cotProgramacionOperativaWrap').classList.toggle('hidden', restringido);
-            document.getElementById('cotProgramacionRestringidaAviso').classList.toggle('hidden', !restringido);
-
-            const selectEstado = document.getElementById('cotEstado');
-            const avisoEstado = document.getElementById('cotEstadoRestringidoAviso');
-            if (restringido) {
-                // No se fuerza el valor aquí: si ya estaba aprobada (Programado, etc.), se conserva tal cual.
-                // abrirModalCotizacion() ya deja "En Cotización" por defecto para una cotización nueva.
-                selectEstado.disabled = true;
-                selectEstado.classList.add('bg-slate-100', 'text-slate-500');
-                avisoEstado.classList.remove('hidden');
-            } else {
-                selectEstado.disabled = false;
-                selectEstado.classList.remove('bg-slate-100', 'text-slate-500');
-                avisoEstado.classList.add('hidden');
-            }
+            const ventas=esVentasActual();
+            const id=document.getElementById('cotId').value;
+            const esEdicion=document.getElementById('cotModo').value==='editar';
+            const actual=esEdicion ? cotizacionesCache.find(c=>c.id_cotizacion===id) : null;
+            const historica=!!actual && !esCotizacionV2MEJ(actual);
+            document.getElementById('cotProgramacionOperativaWrap').classList.remove('hidden');
+            const avisoPreasignacion=document.getElementById('cotProgramacionRestringidaAviso');
+            avisoPreasignacion.classList.toggle('hidden',!ventas && !historica);
+            if (historica) avisoPreasignacion.textContent='Cotización histórica: se conserva su estado original. No se aplicará el nuevo ciclo comercial.';
+            else avisoPreasignacion.textContent='Ventas puede preasignar fecha, vehículo, horario y personal; solo Administración/Supervisión aprueba.';
+            const select=document.getElementById('cotEstado');
+            select.disabled=ventas || historica;
+            select.classList.toggle('bg-slate-100',ventas||historica);
+            select.classList.toggle('text-slate-500',ventas||historica);
+            document.getElementById('cotEstadoRestringidoAviso').classList.toggle('hidden',!(ventas||historica));
+            const aprobar=document.getElementById('btnAprobarRapidoModal');
+            if (aprobar) aprobar.classList.toggle('hidden',!esAdminOSupervisorActual() ||
+                !esEdicion || historica || select.value!=='En revisión interna');
         }
 
         function abrirModalCotizacion() {
@@ -1230,7 +1327,7 @@
             document.getElementById('cotDestinoFinal').value = '';
             document.getElementById('cotTipoPago').value = '';
             document.getElementById('cotMonto').value = '';
-            document.getElementById('cotEstado').value = 'En Cotización';
+            configurarSelectEstadoCotMEJ(null);
             document.getElementById('cotFechaProgramada').value = '';
             document.getElementById('cotVehiculoAsignado').value = '';
             document.getElementById('cotHoraInicio').value = '';
@@ -1241,7 +1338,7 @@
             quitarFoto();
             aplicarRestriccionesFormularioCotizacion();
             openModal('modalCotizacion');
-            fetch(`${WEB_APP_URL}?action=siguiente_id_cotizacion`)
+            fetch(urlGetMEJ('siguiente_id_cotizacion'))
                 .then(res => res.json())
                 .then(data => { document.getElementById('cotId').value = data.nextId; })
                 .catch(() => { document.getElementById('cotId').value = ""; });
@@ -1250,6 +1347,10 @@
         function editarCotizacion(id) {
             const cot = cotizacionesCache.find(c => c.id_cotizacion === id);
             if (!cot) return;
+            if (esVentasActual() && (!esCotizacionV2MEJ(cot) || cot.estado !== 'En revisión interna')) {
+                mostrarToast('Ventas solo puede editar cotizaciones en revisión interna.', 'warning');
+                return;
+            }
 
             document.getElementById('cotModo').value = 'editar';
             document.getElementById('modalCotizacionTitulo').textContent = 'Editar Cotización ' + id;
@@ -1265,7 +1366,7 @@
             document.getElementById('cotDestinoFinal').value = cot.destino || '';
             document.getElementById('cotTipoPago').value = cot.tipo_pago || '';
             document.getElementById('cotMonto').value = cot.monto || '';
-            document.getElementById('cotEstado').value = cot.estado || 'En Cotización';
+            configurarSelectEstadoCotMEJ(cot);
             document.getElementById('cotFechaProgramada').value = cot.fecha_programada || '';
             document.getElementById('cotVehiculoAsignado').value = cot.vehiculo_asignado || '';
             document.getElementById('cotHoraInicio').value = cot.hora_inicio || '';
@@ -1376,13 +1477,7 @@
             const cot = cotizacionesCache.find(c => c.id_cotizacion === idCotizacion);
             if (!cot) { mostrarToast('No se encontró el detalle de ese servicio.', 'error'); return; }
 
-            const ESTILO_ESTADO_BADGE = {
-                'En Cotización': 'bg-amber-50 text-amber-700 border border-amber-200',
-                'Programado': 'bg-blue-50 text-blue-700 border border-blue-100',
-                'En Ejecución': 'bg-orange-50 text-orange-700 border border-orange-100',
-                'Completado': 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-                'Rechazada': 'bg-red-50 text-red-700 border border-red-100'
-            };
+            const ESTILO_ESTADO_BADGE = Object.fromEntries(ESTADOS_MEJ.map(e => [e, clasesEstadoMEJ(e)]));
 
             document.getElementById('detId').textContent = cot.id_cotizacion || '';
             document.getElementById('detCliente').textContent = cot.cliente || '';
@@ -1438,7 +1533,7 @@
             document.getElementById('detBtnPdfExistente').classList.toggle('hidden', !visiblePdf || !cot.url_pdf_cotizacion);
 
             const btnEtapa = document.getElementById('detBtnRegistrarEtapa');
-            const puedeRegistrarEtapa = (cot.estado === 'Programado' || cot.estado === 'En Ejecución');
+            const puedeRegistrarEtapa = (cot.estado === 'Programado' || cot.estado === 'En ejecución' || cot.estado === 'En Ejecución');
             btnEtapa.classList.toggle('hidden', !puedeRegistrarEtapa);
             btnEtapa.onclick = () => {
                 closeModal('modalDetalleServicio');
@@ -1456,13 +1551,17 @@
         }
 
         const ESTILO_ESTADO_CALENDARIO = {
-            'En Cotización': { pill: 'bg-amber-100 text-amber-700 border border-amber-200', barra: 'bg-amber-300', tentativo: true },
-            'Programado':    { pill: 'bg-blue-50 text-blue-700 border border-blue-100',      barra: 'bg-blue-500',   tentativo: false },
-            'En Ejecución':  { pill: 'bg-orange-50 text-orange-700 border border-orange-100', barra: 'bg-orange-500', tentativo: false },
-            'Completado':    { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-100', barra: 'bg-emerald-500', tentativo: false },
-            'Rechazada':     { pill: 'bg-red-50 text-red-700 border border-red-100',         barra: 'bg-red-400',    tentativo: false }
+            'En revisión interna': {pill:clasesEstadoMEJ('En revisión interna'),barra:'bg-amber-400',tentativo:true},
+            'Aprobado internamente': {pill:clasesEstadoMEJ('Aprobado internamente'),barra:'bg-teal-500',tentativo:true},
+            'Enviado al cliente': {pill:clasesEstadoMEJ('Enviado al cliente'),barra:'bg-indigo-400',tentativo:true},
+            'Aceptado por el cliente': {pill:clasesEstadoMEJ('Aceptado por el cliente'),barra:'bg-cyan-500',tentativo:true},
+            'Programado': {pill:clasesEstadoMEJ('Programado'),barra:'bg-blue-500',tentativo:false},
+            'En ejecución': {pill:clasesEstadoMEJ('En ejecución'),barra:'bg-orange-500',tentativo:false},
+            'Servicio concluido': {pill:clasesEstadoMEJ('Servicio concluido'),barra:'bg-emerald-500',tentativo:false},
+            'Por facturar': {pill:clasesEstadoMEJ('Por facturar'),barra:'bg-violet-500',tentativo:false},
+            'Rechazada': {pill:clasesEstadoMEJ('Rechazada'),barra:'bg-red-400',tentativo:false}
         };
-        const ESTADOS_CERRADOS = ['Completado', 'Rechazada'];
+        const ESTADOS_CERRADOS = ['Servicio concluido','Por facturar','Rechazada','Completado'];
 
         // Construye las tarjetas agrupadas por fecha (ascendente) para una lista de servicios ya filtrada
         function construirTarjetasPorFecha(servicios) {
@@ -1556,7 +1655,7 @@
             let html = construirTarjetasPorFecha(activos);
             if (cerrados.length > 0) {
                 html += `<div class="flex items-center gap-2 pt-2 pb-1">
-                    <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Completados / Rechazados</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Concluidos / Por facturar / Rechazados</span>
                     <div class="flex-1 h-px bg-slate-200"></div>
                 </div>` + construirTarjetasPorFecha(cerrados);
             }
@@ -1570,27 +1669,34 @@
             const lista = document.getElementById('listaNotificaciones');
             if (!badge || !lista || !esAdminOSupervisorActual()) return;
 
-            const pendientes = cotizacionesCache.filter(c => c.estado === 'En Cotización');
-
-            if (pendientes.length > 0) {
-                badge.textContent = pendientes.length > 99 ? '99+' : pendientes.length;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-
-            if (pendientes.length === 0) {
-                lista.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No hay cotizaciones pendientes de aprobación.</p>`;
+            // Orden cronológico inverso: Cotizaciones se agrega por appendRow en Sheets.
+            // Cuando existe fecha_creacion se prioriza; en caso contrario se usa el orden físico.
+            const pendientes = cotizacionesCache.filter(c => esCotizacionV2MEJ(c) && c.estado === 'En revisión interna')
+                .slice().sort((a,b) => {
+                    const fa=Date.parse(a.fecha_registro || '') || 0;
+                    const fb=Date.parse(b.fecha_registro || '') || 0;
+                    return (fa && fb && fb !== fa) ? fb-fa : (b._ordenReg || 0)-(a._ordenReg || 0);
+                });
+            const leidas = new Set(idsLeidosCotMEJ());
+            const sinLeer = pendientes.filter(c => !leidas.has(c.id_cotizacion)).length;
+            badge.textContent = sinLeer > 99 ? '99+' : String(sinLeer);
+            badge.classList.toggle('hidden', sinLeer === 0);
+            if (!pendientes.length) {
+                lista.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">No hay cotizaciones en revisión interna.</p>';
                 return;
             }
-
-            lista.innerHTML = pendientes.map(c => `
-                <button onclick="abrirNotificacionCotizacion('${c.id_cotizacion}')" class="w-full text-left px-4 py-2.5 hover:bg-mej-50 transition">
-                    <p class="text-xs font-bold text-mej-700 font-mono">${c.id_cotizacion}</p>
-                    <p class="text-sm font-semibold text-slate-800 truncate">${c.cliente || ''}</p>
-                    <p class="text-xs text-slate-500 truncate">${c.descripcion || ''} — S/. ${c.monto || '0.00'}</p>
-                </button>
-            `).join('');
+            lista.innerHTML = `<div class="px-3 py-2 text-[11px] text-slate-500 bg-slate-50">${pendientes.length} pendiente(s) · ${sinLeer} sin leer</div>` + pendientes.map(c => {
+                const nueva=!leidas.has(c.id_cotizacion);
+                return `<div class="relative border-b border-slate-100 ${nueva?'bg-mej-50 border-l-4 border-l-mej-600':'bg-white'}">
+                    <button onclick="abrirNotificacionCotizacion('${c.id_cotizacion}')" class="w-full text-left px-4 pt-2.5 pb-2 hover:bg-mej-100/70 transition">
+                        <div class="flex justify-between items-center gap-2"><p class="text-xs font-bold text-mej-700 font-mono">${c.id_cotizacion}</p>
+                        ${nueva?'<span class="inline-flex items-center gap-1 text-[10px] text-mej-700 font-semibold"><i class="fa-solid fa-circle text-[7px]"></i> Nueva</span>':'<span class="text-[10px] text-slate-400">Vista</span>'}</div>
+                        <p class="text-sm font-semibold text-slate-800 truncate">${c.cliente || ''}</p>
+                        <p class="text-xs text-slate-500 truncate">${c.descripcion || ''} — S/ ${c.monto || '0.00'}</p>
+                    </button>
+                    <div class="px-4 pb-2.5 flex justify-end"><button onclick="aprobarCotizacionRapido('${c.id_cotizacion}')" class="text-[11px] font-semibold bg-mej-700 text-white px-2.5 py-1.5 rounded-md hover:bg-mej-800"><i class="fa-solid fa-check mr-1"></i>Aprobar cotización</button></div>
+                </div>`;
+            }).join('');
         }
 
         function toggleNotificaciones() {
@@ -1598,9 +1704,29 @@
         }
 
         function abrirNotificacionCotizacion(id) {
+            marcarLeidaCotMEJ(id);
             document.getElementById('panelNotificaciones').classList.add('hidden');
             switchTab('cotizaciones');
             editarCotizacion(id);
+        }
+
+        async function aprobarCotizacionRapido(id) {
+            if (!esAdminOSupervisorActual()) return mostrarToast('No tienes permisos para aprobar.', 'error');
+            const obj=cotizacionesCache.find(c=>c.id_cotizacion===id);
+            if (!obj || !esCotizacionV2MEJ(obj)) return mostrarToast('La aprobación rápida solo está habilitada para nuevas cotizaciones.', 'warning');
+            if (!id || !window.confirm(`¿Aprobar internamente la cotización ${id}? No se activará Programado todavía.`)) return;
+            try {
+                const r = await fetch(WEB_APP_URL, {method:'POST', body:JSON.stringify({
+                    tipo:'aprobar_cotizacion', id_cotizacion:id, token:sesionActual?.token || ''
+                })});
+                const respuesta = await r.json();
+                if (respuesta.result !== 'success') throw new Error(respuesta.message || 'No se pudo aprobar.');
+                marcarLeidaCotMEJ(id);
+                closeModal('modalCotizacion');
+                document.getElementById('panelNotificaciones').classList.add('hidden');
+                mostrarToast(`${id} aprobada internamente.`, 'success');
+                cargarDatos();
+            } catch(e) {mostrarToast('Error de aprobación: '+e.message,'error');}
         }
 
         // Cierra el panel de notificaciones al hacer clic fuera de él
@@ -1615,46 +1741,44 @@
         function renderizarDashboard() {
             const cont = document.getElementById('dashboardKPIs');
             if (!cont) return;
-
-            const ESTADOS_KPI = ['En Cotización', 'Programado', 'En Ejecución', 'Completado'];
-            const COLORES_BARRA = {
-                'En Cotización': 'bg-amber-400',
-                'Programado': 'bg-blue-500',
-                'En Ejecución': 'bg-orange-500',
-                'Completado': 'bg-emerald-500',
-                'Rechazada': 'bg-red-400'
+            const colores = {
+                'En revisión interna':'bg-amber-400', 'Aprobado internamente':'bg-teal-500',
+                'Enviado al cliente':'bg-indigo-400', 'Aceptado por el cliente':'bg-cyan-500',
+                'Programado':'bg-blue-500', 'En ejecución':'bg-orange-500',
+                'Servicio concluido':'bg-emerald-500', 'Por facturar':'bg-violet-500',
+                'Rechazada':'bg-red-500'
             };
+            const conteos={};
+            cotizacionesCache.forEach(c=>{ const e=String(c.estado||'Sin estado'); conteos[e]=(conteos[e]||0)+1; });
+            document.getElementById('kpiEnCotizacion').textContent=
+                (conteos['En revisión interna']||0)+(conteos['En Cotización']||0)+(conteos['Pendiente']||0);
+            document.getElementById('kpiProgramado').textContent=conteos['Programado']||0;
+            document.getElementById('kpiEnEjecucion').textContent=(conteos['En ejecución']||0)+(conteos['En Ejecución']||0);
+            document.getElementById('kpiCompletado').textContent=(conteos['Servicio concluido']||0)+(conteos['Completado']||0);
+            const total=cotizacionesCache.length;
+            const estados=Object.keys(conteos);
+            const color=e=>colores[e]||(['En Cotización','Pendiente'].includes(e)?'bg-amber-300':'bg-slate-400');
+            document.getElementById('dashboardBarra').innerHTML=total ? estados.map(e=>
+                `<div class="${color(e)}" style="width:${(100*conteos[e]/total).toFixed(2)}%" title="${e}: ${conteos[e]}"></div>`
+            ).join(''):'<div class="bg-slate-200 w-full"></div>';
+            document.getElementById('dashboardLeyenda').innerHTML=total ? estados.map(e=>
+                `<span class="flex items-center gap-1 text-slate-600"><i class="w-2.5 h-2.5 rounded-full ${color(e)}"></i>${e}: <b>${conteos[e]}</b></span>`
+            ).join('')+`<span class="ml-auto text-slate-400">Total: ${total}</span>`:
+            '<span class="text-slate-400">Aún no hay cotizaciones.</span>';
+        }
 
-            const conteos = {};
-            ESTADOS_KPI.concat('Rechazada').forEach(e => conteos[e] = 0);
-            cotizacionesCache.forEach(c => {
-                if (conteos.hasOwnProperty(c.estado)) conteos[c.estado]++;
+        function actualizarFiltrosHistoricosMEJ() {
+            ['filtroEstadoCotizaciones','filtroEstadoProgramacion'].forEach(id=>{
+                const filtro=document.getElementById(id);
+                if (!filtro) return;
+                filtro.querySelectorAll('option[data-historico="1"]').forEach(o=>o.remove());
+                const estados=[...new Set(cotizacionesCache.filter(c=>!esCotizacionV2MEJ(c))
+                    .map(c=>String(c.estado||'')))].filter(Boolean);
+                for (const estado of estados) if (![...filtro.options].some(op=>op.value===estado)) {
+                    const op=document.createElement('option');op.value=estado;op.textContent='Histórico: '+estado;
+                    op.dataset.historico='1';filtro.appendChild(op);
+                }
             });
-
-            document.getElementById('kpiEnCotizacion').textContent = conteos['En Cotización'];
-            document.getElementById('kpiProgramado').textContent = conteos['Programado'];
-            document.getElementById('kpiEnEjecucion').textContent = conteos['En Ejecución'];
-            document.getElementById('kpiCompletado').textContent = conteos['Completado'];
-
-            const total = Object.values(conteos).reduce((a, b) => a + b, 0);
-            const barra = document.getElementById('dashboardBarra');
-            const leyenda = document.getElementById('dashboardLeyenda');
-
-            if (total === 0) {
-                barra.innerHTML = `<div class="w-full bg-slate-200"></div>`;
-                leyenda.innerHTML = `<span class="text-slate-400">Aún no hay cotizaciones registradas.</span>`;
-                return;
-            }
-
-            barra.innerHTML = Object.keys(conteos)
-                .filter(e => conteos[e] > 0)
-                .map(e => `<div class="${COLORES_BARRA[e]}" style="width:${(conteos[e] / total * 100).toFixed(1)}%" title="${e}: ${conteos[e]}"></div>`)
-                .join('');
-
-            leyenda.innerHTML = Object.keys(conteos)
-                .filter(e => conteos[e] > 0)
-                .map(e => `<span class="flex items-center gap-1.5 text-slate-500"><span class="w-2.5 h-2.5 rounded-full ${COLORES_BARRA[e]} inline-block"></span>${e}: <strong class="text-slate-700">${conteos[e]}</strong></span>`)
-                .join('') + `<span class="text-slate-400 ml-auto">Total: ${total}</span>`;
         }
 
         // Tabla de Cotizaciones, con filtro rápido por estado
@@ -1663,13 +1787,7 @@
             const filtro = document.getElementById('filtroEstadoCotizaciones');
             if (!tbody) return;
 
-            const coloresEstado = {
-                'En Cotización': 'bg-amber-50 text-amber-700 border border-amber-200',
-                'Programado': 'bg-blue-50 text-blue-700 border border-blue-100',
-                'En Ejecución': 'bg-orange-50 text-orange-700 border border-orange-100',
-                'Completado': 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-                'Rechazada': 'bg-red-50 text-red-700 border border-red-100'
-            };
+            const coloresEstado = Object.fromEntries(ESTADOS_MEJ.map(e => [e, clasesEstadoMEJ(e)]));
 
             let lista = cotizacionesCache;
             if (filtro && filtro.value) lista = lista.filter(c => c.estado === filtro.value);
@@ -1693,7 +1811,8 @@
                     <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${etiquetaEstado(cot.estado)}</span></td>
                     <td class="p-3 whitespace-nowrap">
                         <button onclick="mostrarDetalleServicio('${cot.id_cotizacion}')" class="text-slate-600 hover:underline text-xs font-medium mr-2"><i class="fa-solid fa-eye mr-1"></i>Ver Detalles</button>
-                        <button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium mr-2"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
+                        ${(!esVentasActual() || (esCotizacionV2MEJ(cot) && cot.estado==='En revisión interna')) ? `<button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium mr-2"><i class="fa-solid fa-pen mr-1"></i>Editar</button>` : ''}
+                        ${esAdminOSupervisorActual() && esCotizacionV2MEJ(cot) && cot.estado==='En revisión interna' ? `<button onclick="aprobarCotizacionRapido('${cot.id_cotizacion}')" class="text-mej-700 hover:underline text-xs font-bold mr-2"><i class="fa-solid fa-check mr-1"></i>Aprobar</button>` : ''}
                         <button onclick="previsualizarPdfCotizacion('${cot.id_cotizacion}')" class="text-blue-700 hover:underline text-xs font-medium"><i class="fa-solid fa-file-pdf mr-1"></i>PDF</button>
                     </td>
                 </tr>`;
@@ -1705,7 +1824,7 @@
         }
 
         function cargarDatos() {
-            fetch(`${WEB_APP_URL}?action=usuarios`).then(res => res.json()).then(data => {
+            fetch(urlGetMEJ('usuarios')).then(res => res.json()).then(data => {
                 usuariosCache = data;
                 let selectPersonal = document.getElementById('cotPersonal');
                 if (selectPersonal) {
@@ -1721,7 +1840,7 @@
                 }
             });
 
-            fetch(`${WEB_APP_URL}?action=clientes`).then(res => res.json()).then(data => {
+            fetch(urlGetMEJ('clientes')).then(res => res.json()).then(data => {
                 clientesCache = data;
                 let tbody = document.getElementById('tableClientes');
                 let selectCotCli = document.getElementById('cotCliente');
@@ -1743,16 +1862,20 @@
                 });
             });
 
-            fetch(`${WEB_APP_URL}?action=cotizaciones`).then(res => res.json()).then(data => {
-                cotizacionesCache = data.map(sanearProgramacionCotizacion);
+            fetch(urlGetMEJ('cotizaciones')).then(res => res.json()).then(data => {
+                cotizacionesCache = data.map((cot,i) => ({
+                    ...sanearProgramacionCotizacion(cot),
+                    estado: String(cot.estado || ''), _ordenReg: i
+                }));
                 let selectFacCot = document.getElementById('facCot');
                 selectFacCot.innerHTML = '<option value="">Selecciona una cotización...</option>';
                 cotizacionesCache.forEach(cot => {
-                    if (cot.estado === 'Completado' || cot.estado === 'Programado') {
+                    if (['Programado','En ejecución','Servicio concluido','Por facturar','En Ejecución','Completado'].includes(cot.estado)) {
                         selectFacCot.innerHTML += `<option value="${cot.id_cotizacion}">${cot.id_cotizacion} — ${cot.cliente} (${cot.estado})</option>`;
                     }
                 });
 
+                actualizarFiltrosHistoricosMEJ();
                 renderizarTablaCotizaciones();
                 renderizarCalendario();
                 renderizarDashboard();
@@ -1760,7 +1883,7 @@
                 renderizarNotificaciones();
             });
 
-            fetch(`${WEB_APP_URL}?action=vehiculos`).then(res => res.json()).then(data => {
+            fetch(urlGetMEJ('vehiculos')).then(res => res.json()).then(data => {
                 vehiculosCache = data;
                 let tbody = document.getElementById('tableVehiculos');
                 let selectCotVeh = document.getElementById('cotVehiculoAsignado');
@@ -1781,7 +1904,7 @@
                 });
             });
 
-            fetch(`${WEB_APP_URL}?action=facturacion`).then(res => res.json()).then(data => {
+            fetch(urlGetMEJ('facturacion')).then(res => res.json()).then(data => {
                 let tbody = document.getElementById('tableFacturacion');
                 tbody.innerHTML = "";
                 data.forEach(f => {
@@ -1796,7 +1919,7 @@
                 });
             });
 
-            fetch(`${WEB_APP_URL}?action=bitacora`).then(res => res.json()).then(data => {
+            fetch(urlGetMEJ('bitacora')).then(res => res.json()).then(data => {
                 bitacoraCache = data;
                 renderizarTablaBitacora();
             });
@@ -1862,7 +1985,7 @@
 
         function abrirModalBitacora() {
             const select = document.getElementById('bitCotizacion');
-            const disponibles = cotizacionesCache.filter(c => (c.estado === 'Programado' || c.estado === 'En Ejecución') && servicioAsignadoAUsuarioActual(c));
+            const disponibles = cotizacionesCache.filter(c => (c.estado === 'Programado' || c.estado === 'En ejecución' || c.estado === 'En Ejecución') && servicioAsignadoAUsuarioActual(c));
             select.innerHTML = '<option value="">Selecciona un servicio...</option>' +
                 disponibles.map(c => `<option value="${c.id_cotizacion}">${c.id_cotizacion} — ${c.cliente} (${c.estado})</option>`).join('');
 
@@ -1874,7 +1997,7 @@
             document.getElementById('bitObservaciones').value = '';
 
             if (disponibles.length === 0) {
-                mostrarToast('No hay servicios en estado Programado o En Ejecución.', 'warning');
+                mostrarToast('No hay servicios en estado Programado o En ejecución.', 'warning');
             }
             openModal('modalBitacora');
         }
@@ -1914,6 +2037,7 @@
             if (!sesionActual) { mostrarToast('Sesión expirada.', 'error'); return; }
 
             const data = {
+                token: sesionActual?.token || '',
                 tipo: 'bitacora',
                 id_cotizacion: idCotizacion,
                 id_usuario: sesionActual.id_usuario,
@@ -1947,7 +2071,7 @@
 
         async function guardarRegistro(event, tipo) {
             event.preventDefault();
-            let data = { tipo: tipo };
+            let data = { tipo: tipo, token: sesionActual?.token || '' };
             const btn = document.getElementById('btnGuardar' + capitalize(tipo));
             const btnTexto = document.getElementById('btnGuardar' + capitalize(tipo) + 'Texto');
             const btnSpinner = document.getElementById('btnGuardar' + capitalize(tipo) + 'Spinner');
@@ -2238,7 +2362,7 @@
         }
 
         async function solicitarPdfCotizacion(idCot, accion, extras = {}) {
-            if (!sesionActual || !sesionActual.token) throw new Error('Vuelve a iniciar sesión para utilizar el PDF (requiere sesión nueva).');
+            if (!sesionActual?.token || !sesionActual.token.includes('.')) throw new Error('SESION_INVALIDA: Inicia sesión nuevamente con la versión actualizada.');
             const res = await fetch(WEB_APP_URL, {method:'POST', body:JSON.stringify({
                 tipo:'pdf_cotizacion', accion, id_cotizacion:idCot, token:sesionActual.token, ...extras
             })});
@@ -2288,7 +2412,7 @@
                 paquete.tipo_visualizacion = 'borrador';
                 mejPdfDatos = paquete;
                 renderizarDocumentoHtml(paquete);
-                const puedeEmitir = esAdminOSupervisorActual() && ['Programado','En Ejecución','Completado'].includes(paquete.cotizacion.estado);
+                const puedeEmitir = esAdminOSupervisorActual() && (esCotizacionV2MEJ(paquete.cotizacion) ? ['Programado','En ejecución','Servicio concluido','Por facturar'] : ['Programado','En Ejecución','Completado']).includes(paquete.cotizacion.estado);
                 document.getElementById('pdfBtnGenerar').classList.toggle('hidden', !puedeEmitir);
                 const advertencias = [...(paquete.advertencias || [])];
                 if (!paquete.vehiculo.unidad) advertencias.push('Sin vehículo asignado: confirma los recursos antes de emitir.');
@@ -2299,7 +2423,7 @@
                 aviso.textContent = advertencias.join(' ');
                 aviso.classList.toggle('hidden', advertencias.length === 0);
             } catch (err) {
-                mostrarToast('No se pudo previsualizar: ' + err.message, 'error');
+                if (!responderErrorSesionMEJ(err)) mostrarToast('No se pudo previsualizar: ' + err.message, 'error');
                 if (!mejPdfDatos) cerrarVistaPdfForzado();
             } finally {
                 mejEstablecerProcesando(false);
@@ -2423,7 +2547,7 @@
                 renderizarDocumentoHtml(mejPdfDatos);
                 mejPdfBlob = null;
                 mostrarVistaHtmlPdf();
-                mostrarToast('No se pudo emitir: ' + err.message, 'error');
+                if (!responderErrorSesionMEJ(err)) mostrarToast('No se pudo emitir: ' + err.message, 'error');
             } finally { mejEstablecerProcesando(false); }
         }
 
@@ -2446,7 +2570,7 @@
                 mejPdfBlob = blob; mejPdfEsExistente = true;
                 mejAbrirBlobEnFrame(blob);
             } catch (err) {
-                mostrarToast('No se pudo abrir PDF: '+err.message,'error');
+                if (!responderErrorSesionMEJ(err)) mostrarToast('No se pudo abrir PDF: '+err.message,'error');
                 cerrarVistaPdfForzado();
             } finally { mejEstablecerProcesando(false); }
         }
