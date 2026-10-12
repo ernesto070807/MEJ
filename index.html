@@ -43,6 +43,10 @@
         box-shadow: 0 2px 14px rgba(15, 23, 42, .14); overflow: hidden;
       }
       .mej-doc-pagina * { box-sizing: border-box; }
+      .mej-doc-contenido { overflow-wrap:anywhere; word-break:normal; }
+      /* Ajuste moderado de la foto en la primera sección: conserva
+         proporciones y permite tres páginas cuando el texto es corto. */
+      .mej-doc-pagina[data-grupo="1"] .mej-doc-foto-carga { height:39mm; }
       .mej-doc-header { height: 22mm; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #178342; padding-bottom:3mm; }
       .mej-doc-logo { width:73mm; height:17mm; object-fit:contain; object-position:left top; }
       .mej-doc-kicker { color:#14702c; text-align:right; font-size:8.4pt; font-weight:bold; padding-top:3mm; }
@@ -90,6 +94,7 @@
       .mej-doc-nota { color:#64748b; font-style:italic; font-size:8.8pt; }
       .mej-doc-precio { font-size:13pt; font-weight:bold; color:#14532d; }
       .mej-doc-firma { text-align:right; margin-top:13mm; line-height:1.55; }
+      .mej-doc-continuacion { font-size:8pt; font-weight:bold; color:#14702c; border-bottom:1px solid #e2e8f0; padding-bottom:2mm; margin-bottom:3mm; }
       .mej-doc-footer { position:absolute; left:17mm; right:17mm; bottom:8mm; border-top:1px solid #97bfa7; padding-top:3mm; display:flex; justify-content:space-between; font-size:7.7pt; color:#475569; }
       .mej-pdf-oculto { position:absolute!important; left:-25000px!important; top:0!important; width:210mm!important; height:auto!important; overflow:visible!important; display:block!important; visibility:visible!important; }
       @media (max-width: 900px) { #mejDocumentoVista { min-width: 210mm; } }
@@ -2464,6 +2469,8 @@
                 </div>
               </main>${mejPie(3)}</section>`;
             document.getElementById('mejDocumentoVista').innerHTML = pagina1 + pagina2 + pagina3;
+            document.getElementById('mejDocumentoVista').dataset.paginadoA4 = '0';
+            requestAnimationFrame(() => { try { mejPaginarDocumentoA4(); } catch(e) { console.warn('Paginación PDF pendiente:', e); } });
             document.querySelectorAll('#mejDocumentoVista .mej-doc-foto-carga img, #mejDocumentoVista .mej-doc-foto-unidad img')
                 .forEach(img => { if (img.complete) mejAjustarImagenDocumento(img); });
         }
@@ -2540,6 +2547,204 @@
             mejPdfProcesando = false; cerrarVistaPdf();
         }
 
+        // ==========================================================
+        // PAGINACIÓN DINÁMICA A4 — evita desbordamientos y pérdida de texto
+        // ==========================================================
+        // Mantiene las tres secciones corporativas y agrega páginas de
+        // continuación solo cuando el contenido real lo requiere.
+        // Las mediciones se realizan sobre el DOM renderizado, no por
+        // número de caracteres (las fotografías y fuentes cambian alturas).
+        function mejPaginaTieneEspacio(pagina, bloque) {
+            const pie = pagina.querySelector('.mej-doc-footer');
+            const limite = pie.getBoundingClientRect().top - 13;
+            const rect = bloque.getBoundingClientRect();
+            const margen = parseFloat(getComputedStyle(bloque).marginBottom) || 0;
+            return rect.bottom + margen <= limite;
+        }
+
+        function mejCrearPaginaA4(origen, grupo, continuacion) {
+            const doc = document.createElement('section');
+            doc.className = 'mej-doc-pagina';
+            doc.dataset.grupo = grupo;
+            doc.dataset.continuacion = continuacion ? '1' : '0';
+            const encabezado = origen.querySelector('.mej-doc-header');
+            const pie = origen.querySelector('.mej-doc-footer');
+            doc.appendChild(encabezado.cloneNode(true));
+            const cuerpo = document.createElement('main');
+            cuerpo.className = 'mej-doc-contenido';
+            if (continuacion) {
+                const rotulo = document.createElement('div');
+                rotulo.className = 'mej-doc-continuacion';
+                rotulo.textContent = 'COTIZACIÓN DE SERVICIO · CONTINUACIÓN';
+                cuerpo.appendChild(rotulo);
+            }
+            doc.appendChild(cuerpo);
+            doc.appendChild(pie.cloneNode(true));
+            return doc;
+        }
+
+        // Divide un bloque textual excesivamente largo conservando sus
+        // etiquetas (negritas, párrafos, viñetas). No divide fotografías.
+        // El corte se hace por palabras y se valida midiendo el DOM real.
+        function mejDividirBloquePorEspacio(bloque, pagina) {
+            if (bloque.querySelector('img, canvas, iframe, table')) return null;
+            const nodos = [];
+            const walker = document.createTreeWalker(bloque, NodeFilter.SHOW_TEXT);
+            let nodo, largo = 0;
+            while ((nodo = walker.nextNode())) {
+                if (!nodo.textContent.length) continue;
+                nodos.push({ nodo, desde:largo, hasta:largo+nodo.textContent.length });
+                largo += nodo.textContent.length;
+            }
+            if (largo < 2) return null;
+            const texto = nodos.map(n=>n.nodo.textContent).join('');
+            let puntos = [];
+            for (let i=1; i<largo; i++) {
+                if (/\s/.test(texto[i-1]) || /\s/.test(texto[i])) puntos.push(i);
+            }
+            // Para una cadena sin espacios también puede dividir por letras.
+            if (!puntos.length) puntos = Array.from({length:largo-1}, (_,i)=>i+1);
+
+            function partesEn(pos) {
+                const entrada = nodos.find(n => pos >= n.desde && pos <= n.hasta);
+                if (!entrada) return null;
+                const offset = pos - entrada.desde;
+                const izquierda = bloque.cloneNode(false);
+                const derecha = bloque.cloneNode(false);
+                const a = document.createRange();
+                a.selectNodeContents(bloque);
+                a.setEnd(entrada.nodo, offset);
+                izquierda.appendChild(a.cloneContents());
+                const b = document.createRange();
+                b.selectNodeContents(bloque);
+                b.setStart(entrada.nodo, offset);
+                derecha.appendChild(b.cloneContents());
+                return [izquierda, derecha];
+            }
+            const main = pagina.querySelector('.mej-doc-contenido');
+            let low=0, high=puntos.length-1, ganador=null;
+            while (low<=high) {
+                const mid=Math.floor((low+high)/2);
+                const fragmentos=partesEn(puntos[mid]);
+                if (!fragmentos) return null;
+                const [primero, resto] = fragmentos;
+                main.appendChild(primero);
+                const cabe = mejPaginaTieneEspacio(pagina, primero);
+                primero.remove();
+                if (cabe && primero.textContent.trim().length) {
+                    ganador=fragmentos;
+                    low=mid+1;
+                } else {
+                    high=mid-1;
+                }
+            }
+            if (!ganador && puntos.length !== largo-1) {
+                // Texto anormalmente largo sin un punto útil: corte por carácter.
+                puntos = Array.from({length:largo-1}, (_,i)=>i+1);
+                low=0; high=puntos.length-1;
+                while (low<=high) {
+                    const mid=Math.floor((low+high)/2);
+                    const fragmentos=partesEn(puntos[mid]);
+                    const primero=fragmentos[0];
+                    main.appendChild(primero);
+                    const cabe=mejPaginaTieneEspacio(pagina, primero);
+                    primero.remove();
+                    if (cabe && primero.textContent.trim()) { ganador=fragmentos; low=mid+1; }
+                    else high=mid-1;
+                }
+            }
+            return ganador && ganador[1].textContent.trim() ? ganador : null;
+        }
+
+        function mejPaginarDocumentoA4() {
+            const destino=document.getElementById('mejDocumentoVista');
+            if (!destino || destino.dataset.paginadoA4==='1') return;
+            const originales=[...destino.querySelectorAll(':scope > .mej-doc-pagina')];
+            if (originales.length !== 3) return;
+            const datos=originales.map((pagina,i)=>({
+                origen:pagina,
+                grupo:String(i+1),
+                bloques:[...pagina.querySelector('.mej-doc-contenido').children].map(e=>e.cloneNode(true))
+            }));
+            destino.replaceChildren();
+            let total=0;
+            for (const grupo of datos) {
+                let pagina=mejCrearPaginaA4(grupo.origen,grupo.grupo,false);
+                destino.appendChild(pagina); total++;
+                const pendientes=[...grupo.bloques];
+                let intentos=0;
+                while (pendientes.length) {
+                    if (++intentos > 1000 || total > 90) throw new Error('El documento contiene demasiadas páginas para procesar.');
+                    const actual=pendientes.shift();
+                    let cuerpo=pagina.querySelector('.mej-doc-contenido');
+                    cuerpo.appendChild(actual);
+                    // Evitar encabezados huérfanos: dejar espacio para el
+                    // primer renglón del bloque siguiente.
+                    const esTitulo=/^H[1-6]$/.test(actual.tagName);
+                    let cabe=mejPaginaTieneEspacio(pagina,actual);
+                    if (cabe && esTitulo && pendientes.length) {
+                        // Un título no se deja solo al final de la hoja.
+                        // Si ya es el primero de una hoja de continuación,
+                        // se mantiene y se divide el bloque siguiente.
+                        const previo=[...cuerpo.children].some(el=>
+                            el!==actual && !el.classList.contains('mej-doc-continuacion'));
+                        if (previo) {
+                            const siguiente=pendientes[0];
+                            cuerpo.appendChild(siguiente);
+                            cabe=mejPaginaTieneEspacio(pagina,siguiente);
+                            siguiente.remove();
+                        }
+                    }
+                    if (cabe) continue;
+                    actual.remove();
+                    // Si la página tiene ya contenidos, intentar colocar el
+                    // bloque completo en la siguiente página antes de cortarlo.
+                    const tieneContenido=[...cuerpo.children].some(el => !el.classList.contains('mej-doc-continuacion'));
+                    if (tieneContenido) {
+                        pagina=mejCrearPaginaA4(grupo.origen,grupo.grupo,true);
+                        destino.appendChild(pagina); total++;
+                        cuerpo=pagina.querySelector('.mej-doc-contenido');
+                        cuerpo.appendChild(actual);
+                        if (mejPaginaTieneEspacio(pagina,actual)) continue;
+                        actual.remove();
+                    }
+                    const fragmentos=mejDividirBloquePorEspacio(actual,pagina);
+                    if (!fragmentos) {
+                        // Última defensa: textos con estructura inusual se
+                        // colocan en páginas independientes, sin ocultarlos.
+                        // El error se reserva para imágenes gigantes o HTML
+                        // atómico; nunca se silencian ni se recortan datos.
+                        throw new Error('No se pudo paginar un bloque indivisible de la sección '+grupo.grupo+'.');
+                    }
+                    cuerpo.appendChild(fragmentos[0]);
+                    pagina=mejCrearPaginaA4(grupo.origen,grupo.grupo,true);
+                    destino.appendChild(pagina); total++;
+                    pendientes.unshift(fragmentos[1]);
+                }
+            }
+            // Ubicar el texto de cierre y la firma al final cuando hay espacio.
+            const ultimas=[...destino.querySelectorAll('.mej-doc-pagina[data-grupo="3"]')];
+            const ultima=ultimas[ultimas.length-1];
+            if (ultima) {
+                const cuerpo=ultima.querySelector('.mej-doc-contenido');
+                const cajaCierre=cuerpo.querySelector('.mej-doc-cierre');
+                if (cajaCierre) {
+                    cuerpo.classList.add('mej-doc-contenido-ultimo');
+                    if (!mejPaginaTieneEspacio(ultima,cajaCierre)) {
+                        cuerpo.classList.remove('mej-doc-contenido-ultimo');
+                    }
+                }
+            }
+            const paginas=[...destino.querySelectorAll(':scope > .mej-doc-pagina')];
+            paginas.forEach((p,i)=>{
+                p.dataset.pagina=String(i+1);
+                const spans=p.querySelectorAll('.mej-doc-footer span');
+                if (spans.length) spans[spans.length-1].textContent=`${i+1} / ${paginas.length}`;
+            });
+            destino.dataset.paginadoA4='1';
+            return paginas;
+        }
+
         async function generarPdfDesdeHtml() {
             if (mejPdfBlob) return mejPdfBlob;
             if (!mejPdfDatos) throw new Error('Primero abre una cotización en vista previa.');
@@ -2547,13 +2752,15 @@
                 throw new Error('No se cargaron html2canvas/jsPDF. Comprueba la conexión y las bibliotecas CDN.');
             }
             mostrarVistaHtmlPdf();
-            const paginas = [...document.querySelectorAll('#mejDocumentoVista .mej-doc-pagina')];
-            if (paginas.length !== 3) throw new Error('La plantilla institucional debe tener exactamente tres páginas.');
             if (document.fonts && document.fonts.ready) await document.fonts.ready;
             const imagenes = [...document.querySelectorAll('#mejDocumentoVista img')];
             await Promise.all(imagenes.map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
                 img.addEventListener('load',resolve,{once:true}); img.addEventListener('error',resolve,{once:true});
             })));
+            // La plantilla se pagina automáticamente si el contenido supera A4.
+            mejPaginarDocumentoA4();
+            const paginas = [...document.querySelectorAll('#mejDocumentoVista .mej-doc-pagina')];
+            if (!paginas.length) throw new Error('No se pudo preparar ninguna página del documento.');
             // Asegura que html2canvas capture el mismo tamaño proporcional de la vista previa.
             document.querySelectorAll('#mejDocumentoVista .mej-doc-foto-carga img, #mejDocumentoVista .mej-doc-foto-unidad img')
                 .forEach(mejAjustarImagenDocumento);
@@ -2561,9 +2768,9 @@
             pdf.setProperties({title:'Cotización ' + mejPdfDatos.cotizacion.id_cotizacion,author:'MEJ & Solutions Service S.A.C.',subject:'Cotización comercial'});
             for (let i = 0; i < paginas.length; i++) {
                 const pag = paginas[i];
-                if (pag.scrollHeight > pag.clientHeight + 4) {
-                    throw new Error('El contenido excede el A4 en la página ' + (i+1) + '. Ajusta la plantilla o acorta los textos antes de emitir.');
-                }
+                // Verificación final: no permitir contenidos ocultos tras paginar.
+                const fuera=[...pag.querySelector('.mej-doc-contenido').children].filter(el => !mejPaginaTieneEspacio(pag,el));
+                if (fuera.length) throw new Error('No se pudo finalizar la paginación A4 de la página '+(i+1)+'.');
                 mejMostrarCarga(`Convirtiendo página ${i+1} de ${paginas.length} a PDF...`);
                 const canvas = await window.html2canvas(pag, {scale:1.6, useCORS:false, backgroundColor:'#ffffff', logging:false});
                 const jpg = canvas.toDataURL('image/jpeg',.87);
