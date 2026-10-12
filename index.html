@@ -80,12 +80,17 @@
       .mej-doc-tabla-banco thead tr:first-child th { background:#0d9e46; color:#fff; }
       .mej-doc-lista { margin:2mm 0 0 0; padding-left:6mm; }
       .mej-doc-lista li { margin-bottom:2.2mm; }
+      .mej-doc-lista { list-style-type:disc!important; list-style-position:outside; }
+      .mej-doc-lista-compacta { margin:1.2mm 0 2.5mm; padding-left:7mm; }
+      .mej-doc-lista-compacta li { margin:0 0 1mm 0; line-height:1.3; }
+      .mej-doc-contenido-ultimo { display:flex; flex-direction:column; height:225mm; }
+      .mej-doc-cierre { margin-top:auto; padding:0 0 2mm; }
+      .mej-doc-cierre .mej-doc-firma { margin-top:7mm; }
       .mej-doc-resaltar { font-weight:bold; color:#166534; }
       .mej-doc-nota { color:#64748b; font-style:italic; font-size:8.8pt; }
       .mej-doc-precio { font-size:13pt; font-weight:bold; color:#14532d; }
       .mej-doc-firma { text-align:right; margin-top:13mm; line-height:1.55; }
       .mej-doc-footer { position:absolute; left:17mm; right:17mm; bottom:8mm; border-top:1px solid #97bfa7; padding-top:3mm; display:flex; justify-content:space-between; font-size:7.7pt; color:#475569; }
-      .mej-doc-borrador { position:absolute; left:20mm; top:125mm; width:170mm; text-align:center; transform:rotate(-32deg); font:bold 56pt Arial; color:rgba(203, 41, 41, .11); pointer-events:none; z-index:2; }
       .mej-pdf-oculto { position:absolute!important; left:-25000px!important; top:0!important; width:210mm!important; height:auto!important; overflow:visible!important; display:block!important; visibility:visible!important; }
       @media (max-width: 900px) { #mejDocumentoVista { min-width: 210mm; } }
     </style>
@@ -793,7 +798,7 @@
 
     <!-- SCRIPTS DE LÓGICA -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzO2gmVCtngdey5qK2PvQmJerSN_UGpys9WHyvjDtQwNYopqm8Hn3uWfEFraztDH2P8/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz-DjxpD9oG-sH9QxP-l4h2U4GsEXGzr79pjrUax9LdvQVQyzCSxbnFdRP2_aQ4bX8B/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
@@ -2200,7 +2205,7 @@
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
         }
-        function mejDato(valor, alternativo = 'Por confirmar') {
+        function mejDato(valor, alternativo = '') {
             return mejTextoSeguro(String(valor === null || valor === undefined ? '' : valor).trim() || alternativo);
         }
         function mejMoneda(valor) {
@@ -2262,9 +2267,18 @@
             const e = mejDato;
             const logo = mejLogoInstitucional();
             const nombre = e(cl.razon_social || c.cliente);
-            const recursos = String(c.conductor_asignado || '').split(',').map(x=>x.trim()).filter(Boolean);
-            const operadores = c.cantidad_recursos_operador || 'Por confirmar';
-            const auxiliares = c.cantidad_recursos_auxiliar || 'Por confirmar';
+// Los puestos provienen del backend, que consulta Usuarios[puesto].
+            // No se muestra el nombre del trabajador ni valores genéricos.
+            const listaPuestos = Array.isArray(paquete.personal_pdf) ? paquete.personal_pdf : [];
+            const puestosHtml = listaPuestos.filter(r => Number(r.cantidad) > 0).map(r => {
+                const cantidad = Number(r.cantidad);
+                const etiqueta = String(r.puesto || '').trim();
+                const plural = etiqueta === 'Auxiliar de carga' && cantidad > 1 ? 'Auxiliares de carga'
+                   : etiqueta === 'Operador de unidad' && cantidad > 1 ? 'Operadores de unidad' : etiqueta;
+                const prefijo = cantidad > 1 ? String(cantidad).padStart(2, '0') + ' ' : '';
+                return `<li>${mejTextoSeguro(prefijo + plural)}</li>`;
+            }).join('');
+            const volumenUnidad = v.m3 || '';
             const numero = e(c.id_cotizacion);
             const fecha = mejFechaLarga(paquete.fecha_emision);
             const monto = mejMoneda(c.monto);
@@ -2275,7 +2289,7 @@
             const residuo = e(c.tipo_material);
             const imgCarga = mejImagenOPlaceholder(paquete.foto_carga, 'Fotografía referencial de la carga', 'mej-doc-foto-carga');
             const imgVeh = mejImagenOPlaceholder(paquete.foto_vehiculo, 'Fotografía de unidad', 'mej-doc-foto-unidad');
-            const folio = paquete.tipo_visualizacion === 'oficial' ? '' : '<div class="mej-doc-borrador">BORRADOR</div>';
+            const folio = ''; // El documento se visualiza sin marcas de agua comerciales.
 
             const pagina1 = `<section class="mej-doc-pagina" data-pagina="1">
               ${mejEncabezado(logo)}${folio}
@@ -2296,11 +2310,16 @@
                 <p class="mej-doc-parrafo" style="margin-top:3mm"><strong>Imagen referencial:</strong></p>
                 ${imgCarga}
                 <h2 class="mej-doc-subtitulo">RECURSOS</h2>
-                <p class="mej-doc-parrafo">${e(operadores)} operador(es) de la unidad · ${e(auxiliares)} auxiliar(es) de carga</p>
-                <p class="mej-doc-parrafo"><strong>Unidad:</strong> ${e(c.vehiculo_asignado)} · <strong>Volumen:</strong> ${e(c.volumen_aprox || v.m3,'No especificado')} m³</p>
-                ${recursos.length ? `<p class="mej-doc-parrafo"><strong>Personal asignado:</strong> ${e(recursos.join(', '))}</p>` : ''}
-                <h2 class="mej-doc-subtitulo">EQUIPOS</h2>
-                <p class="mej-doc-parrafo">Uso de EPP: casco, lentes de seguridad, guantes de jebe y/o cuero y overol reflectivo.</p>
+                ${puestosHtml ? `<ul class="mej-doc-lista mej-doc-lista-compacta">${puestosHtml}</ul>` : ''}
+                <p class="mej-doc-parrafo"><strong>Unidad (placa):</strong> ${e(v.unidad || c.vehiculo_asignado)}</p>
+                ${volumenUnidad ? `<p class="mej-doc-parrafo"><strong>Volumen del vehículo:</strong> ${e(volumenUnidad)} m³</p>` : ''}
+                <h2 class="mej-doc-subtitulo">EQUIPOS DE PROTECCIÓN PERSONAL (EPP)</h2>
+                <ul class="mej-doc-lista mej-doc-lista-compacta">
+                  <li>Casco de seguridad</li>
+                  <li>Lentes de seguridad</li>
+                  <li>Guantes de jebe y/o cuero</li>
+                  <li>Overol reflectivo</li>
+                </ul>
               </main>${mejPie(1)}</section>`;
 
             const pagina2 = `<section class="mej-doc-pagina" data-pagina="2">
@@ -2337,7 +2356,7 @@
 
             const pagina3 = `<section class="mej-doc-pagina" data-pagina="3">
               ${mejEncabezado(logo)}${folio}
-              <main class="mej-doc-contenido">
+              <main class="mej-doc-contenido mej-doc-contenido-ultimo">
                 <h1 class="mej-doc-titulo">CONDICIONES GENERALES</h1>
                 <p class="mej-doc-parrafo">La presente cotización se encuentra sujeta a las siguientes condiciones comerciales y operativas:</p>
                 <ul class="mej-doc-lista" style="margin-top:8mm">
@@ -2348,12 +2367,14 @@
                   <li>Las tarifas incluyen conductor capacitado, con SCTR y sus implementos para el manejo de residuos.</li>
                   <li><strong>Validez de la oferta: 15 días calendario.</strong></li>
                 </ul>
-                <p class="mej-doc-parrafo" style="margin-top:18mm;text-align:center">Cualquier consulta, no dude en comunicarse con nosotros.</p>
-                <div class="mej-doc-firma">Atentamente,<br><br>
-                  <strong>${e(f.nombre)}</strong><br>
-                  ${e(f.puesto,'Área comercial')}<br>
-                  ${f.celular ? `Celular: ${e(f.celular)}<br>` : ''}
-                  ventas@mejsolutions.com.pe
+                <div class="mej-doc-cierre">
+                  <p class="mej-doc-parrafo" style="text-align:center">Cualquier consulta, no dude en comunicarse con nosotros.</p>
+                  <div class="mej-doc-firma">Atentamente,<br><br>
+                    <strong>${e(f.nombre)}</strong><br>
+                    ${e(f.puesto,'Área comercial')}<br>
+                    ${f.celular ? `Celular: ${e(f.celular)}<br>` : ''}
+                    ventas@mejsolutions.com.pe
+                  </div>
                 </div>
               </main>${mejPie(3)}</section>`;
             document.getElementById('mejDocumentoVista').innerHTML = pagina1 + pagina2 + pagina3;
@@ -2402,7 +2423,7 @@
             pdfCotizacionActual = idCot;
             ['pdfBtnVistaHtml','pdfBtnVer','pdfBtnDescargar'].forEach(id => document.getElementById(id).classList.remove('hidden'));
             mejAbrirModal();
-            document.getElementById('pdfTitulo').textContent = 'Borrador · ' + idCot;
+            document.getElementById('pdfTitulo').textContent = 'Vista previa · ' + idCot;
             document.getElementById('pdfAviso').textContent = 'Vista HTML del documento. No se ha guardado el PDF.';
             document.getElementById('pdfBtnGenerar').classList.add('hidden');
             mostrarVistaHtmlPdf();
@@ -2416,9 +2437,8 @@
                 document.getElementById('pdfBtnGenerar').classList.toggle('hidden', !puedeEmitir);
                 const advertencias = [...(paquete.advertencias || [])];
                 if (!paquete.vehiculo.unidad) advertencias.push('Sin vehículo asignado: confirma los recursos antes de emitir.');
-                if (!paquete.cotizacion.cantidad_recursos_operador || !paquete.cotizacion.cantidad_recursos_auxiliar) {
-                    advertencias.push('Cantidad de operadores/auxiliares no registrada: se presenta "Por confirmar" para no suponer cargos.');
-                }
+                // Los puestos se resuelven consultando Usuarios[puesto] desde el backend.
+                // Sin personal registrado se omite el renglón; nunca se inventan cargos.
                 const aviso = document.getElementById('pdfMensajeAdvertencia');
                 aviso.textContent = advertencias.join(' ');
                 aviso.classList.toggle('hidden', advertencias.length === 0);
@@ -2499,7 +2519,7 @@
                 const enlace = document.createElement('a');
                 const temporal = URL.createObjectURL(blob);
                 enlace.href = temporal;
-                enlace.download = (mejPdfEsExistente ? 'Cotizacion_' : 'BORRADOR_') + pdfCotizacionActual + '.pdf';
+                enlace.download = pdfCotizacionActual + '.pdf';
                 document.body.appendChild(enlace); enlace.click(); enlace.remove();
                 setTimeout(() => URL.revokeObjectURL(temporal), 1500);
             } catch (err) { mostrarToast('No se pudo descargar: ' + err.message,'error'); }
