@@ -30,6 +30,51 @@
         @keyframes toastIn { from { opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
         .toast { animation: toastIn .25s ease-out; }
     </style>
+    <!-- PDF en el navegador: no requiere Google Docs ni AppSheet. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <!-- Plantilla imprimible MEJ. Las reglas son independientes de Tailwind. -->
+    <style id="mejEstilosDocumentoPdf">
+      .mej-doc-pagina {
+        width: 210mm; height: 297mm; min-width: 210mm; min-height: 297mm;
+        box-sizing: border-box; position: relative; background: #fff; color: #20272e;
+        margin: 0 auto 18px; padding: 13mm 17mm 16mm;
+        font: 9.8pt/1.37 Arial, Helvetica, sans-serif;
+        box-shadow: 0 2px 14px rgba(15, 23, 42, .14); overflow: hidden;
+      }
+      .mej-doc-pagina * { box-sizing: border-box; }
+      .mej-doc-header { height: 22mm; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #178342; padding-bottom:3mm; }
+      .mej-doc-logo { width:73mm; height:17mm; object-fit:contain; object-position:left top; }
+      .mej-doc-kicker { color:#14702c; text-align:right; font-size:8.4pt; font-weight:bold; padding-top:3mm; }
+      .mej-doc-contenido { padding-top:5mm; }
+      .mej-doc-titulo { text-align:center; font-weight:bold; font-size:16pt; color:#154a27; letter-spacing:.04em; margin:0 0 4.5mm; }
+      .mej-doc-subtitulo { font-size:10.5pt; color:#116c34; font-weight:bold; border-bottom:1px solid #b7dec4; margin:4mm 0 2mm; padding-bottom:1.4mm; }
+      .mej-doc-parrafo { margin:0 0 1.7mm; overflow-wrap:anywhere; }
+      .mej-doc-campo { color:#111827; font-weight:bold; }
+      .mej-doc-dato { display:grid; grid-template-columns:40mm 1fr; column-gap:4mm; padding:1.5mm 0; border-bottom:1px solid #eef2f0; }
+      .mej-doc-dato-label { font-weight:bold; color:#475569; }
+      .mej-doc-dato-valor { overflow-wrap:anywhere; }
+      .mej-doc-caja { border:1px solid #cbd5e1; border-radius:2mm; padding:3mm 4mm; background:#f8fbf9; margin:3mm 0; }
+      .mej-doc-foto-carga { width:100%; height:31mm; border:1px dashed #cbd5e1; border-radius:2mm; display:flex; justify-content:center; align-items:center; color:#64748b; background:#f8fafc; overflow:hidden; }
+      .mej-doc-foto-carga img { width:100%; height:100%; object-fit:contain; }
+      .mej-doc-foto-unidad { width:100%; height:56mm; border:1px solid #cbd5e1; display:flex; align-items:center; justify-content:center; background:#f8fafc; color:#64748b; overflow:hidden; }
+      .mej-doc-foto-unidad img { width:100%; height:100%; object-fit:contain; }
+      .mej-doc-tabla { width:100%; border-collapse:collapse; table-layout:fixed; font-size:9.5pt; margin-top:3mm; }
+      .mej-doc-tabla th, .mej-doc-tabla td { border:1px solid #b7c4bc; padding:3mm 2.5mm; vertical-align:middle; overflow-wrap:anywhere; }
+      .mej-doc-tabla th { background:#e8f5eb; color:#14532d; font-weight:bold; }
+      .mej-doc-tabla-banco th, .mej-doc-tabla-banco td { padding:2.3mm 1.5mm; font-size:8.2pt; text-align:center; }
+      .mej-doc-tabla-banco thead tr:first-child th { background:#0d9e46; color:#fff; }
+      .mej-doc-lista { margin:2mm 0 0 0; padding-left:6mm; }
+      .mej-doc-lista li { margin-bottom:2.2mm; }
+      .mej-doc-resaltar { font-weight:bold; color:#166534; }
+      .mej-doc-nota { color:#64748b; font-style:italic; font-size:8.8pt; }
+      .mej-doc-precio { font-size:13pt; font-weight:bold; color:#14532d; }
+      .mej-doc-firma { text-align:right; margin-top:13mm; line-height:1.55; }
+      .mej-doc-footer { position:absolute; left:17mm; right:17mm; bottom:8mm; border-top:1px solid #97bfa7; padding-top:3mm; display:flex; justify-content:space-between; font-size:7.7pt; color:#475569; }
+      .mej-doc-borrador { position:absolute; left:20mm; top:125mm; width:170mm; text-align:center; transform:rotate(-32deg); font:bold 56pt Arial; color:rgba(203, 41, 41, .11); pointer-events:none; z-index:2; }
+      .mej-pdf-oculto { position:absolute!important; left:-25000px!important; top:0!important; width:210mm!important; height:auto!important; overflow:visible!important; display:block!important; visibility:visible!important; }
+      @media (max-width: 900px) { #mejDocumentoVista { min-width: 210mm; } }
+    </style>
 </head>
 <body class="bg-[#F8FAFC] text-slate-800 font-sans">
 
@@ -583,6 +628,31 @@
         </div>
     </div>
 
+    <!-- VISTA PREVIA HTML Y GENERACIÓN PDF EN EL NAVEGADOR; Code.gs solo entrega datos y almacena. -->
+    <div id="modalVistaPdf" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-[120] p-2 md:p-5" role="dialog" aria-modal="true" aria-labelledby="pdfTitulo">
+        <div class="bg-slate-100 w-full max-w-6xl h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white border-b border-slate-200">
+                <div class="min-w-0">
+                    <h3 id="pdfTitulo" class="font-bold text-slate-800">Cotización MEJ</h3>
+                    <p id="pdfAviso" class="text-xs text-slate-500">La previsualización HTML no guarda ningún PDF en Drive.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" id="pdfBtnVistaHtml" onclick="mostrarVistaHtmlPdf()" class="bg-white border border-slate-300 hover:bg-slate-50 px-3 py-2 rounded-lg text-xs font-semibold">Vista HTML</button>
+                    <button type="button" id="pdfBtnVer" onclick="mostrarPdfGenerado()" class="bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-lg text-xs font-semibold">Ver PDF</button>
+                    <button type="button" id="pdfBtnDescargar" onclick="descargarCotizacionPdf()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-semibold">Descargar</button>
+                    <button type="button" id="pdfBtnGenerar" onclick="confirmarEmisionPdfDesdeVista()" class="hidden bg-mej-700 hover:bg-mej-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Guardar PDF oficial</button>
+                    <button type="button" onclick="cerrarVistaPdf()" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-lg text-xs font-semibold">Cerrar</button>
+                </div>
+            </div>
+            <div id="pdfEstadoCarga" class="hidden py-2 text-center text-xs text-blue-700 bg-blue-50 border-b border-blue-100">Preparando documento...</div>
+            <div id="pdfMensajeAdvertencia" class="hidden mx-4 mt-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg p-2 text-xs"></div>
+            <div id="pdfContenedorHtml" class="flex-1 overflow-auto p-4 bg-slate-200">
+                <div id="mejDocumentoVista" class="space-y-4"></div>
+            </div>
+            <iframe id="pdfFrame" title="PDF de la cotización" class="hidden w-full flex-1 border-0 bg-white" src="about:blank"></iframe>
+        </div>
+    </div>
+
     <!-- VISOR DE IMAGEN A PANTALLA COMPLETA -->
     <div id="modalVisorImagen" onclick="closeModal('modalVisorImagen')" class="fixed inset-0 bg-black/85 hidden items-center justify-center z-[110] p-4 cursor-zoom-out">
         <img id="visorImagenSrc" class="max-w-full max-h-full rounded-lg shadow-2xl">
@@ -686,6 +756,8 @@
 
             <div class="flex justify-end gap-2 pt-4 mt-2 border-t border-slate-100">
                 <button type="button" onclick="closeModal('modalDetalleServicio')" class="px-4 py-2 text-sm bg-slate-100 rounded-lg">Cerrar</button>
+                <button type="button" id="detBtnPdfPrevia" onclick="previsualizarPdfCotizacion()" class="hidden px-3 py-2 text-sm bg-blue-50 text-blue-700 border border-blue-200 rounded-lg"><i class="fa-solid fa-file-pdf mr-1"></i>Previsualizar PDF</button>
+                <button type="button" id="detBtnPdfExistente" onclick="abrirPdfExistenteCotizacion()" class="hidden px-3 py-2 text-sm bg-green-50 text-green-800 border border-green-200 rounded-lg">Ver PDF emitido</button>
                 <button type="button" id="detBtnRegistrarEtapa" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg"><i class="fa-solid fa-route mr-1"></i>Registrar Etapa</button>
             </div>
         </div>
@@ -693,7 +765,7 @@
 
     <!-- SCRIPTS DE LÓGICA -->
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz-DjxpD9oG-sH9QxP-l4h2U4GsEXGzr79pjrUax9LdvQVQyzCSxbnFdRP2_aQ4bX8B/exec'; // Tu URL real
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3CRdDvjlmw3KMhJacgogAoD6jp5phqyIXfHSdffxnnf7aoSeWpuE77u7yM67eUVnp/exec'; // Tu URL real
 
         let cotizacionesCache = [];
         let clientesCache = [];
@@ -703,6 +775,8 @@
         let fotoBase64Actual = null;
         let fotoUrlEnEdicion = null;
         let sesionActual = null;
+        let pdfCotizacionActual = null;
+        let urlBlobPdfActual = null;
         const ESTADOS_OCUPAN_VEHICULO = ['Programado', 'En Ejecución'];
         const CLAVE_SESION = 'mej_sesion';
 
@@ -787,6 +861,12 @@
                 const guardada = localStorage.getItem(CLAVE_SESION);
                 if (guardada) {
                     sesionActual = JSON.parse(guardada);
+                    // Las sesiones previas a esta integración no poseen token PDF.
+                    if (!sesionActual || !sesionActual.token) {
+                        localStorage.removeItem(CLAVE_SESION);
+                        sesionActual = null;
+                        throw new Error('Vuelve a iniciar sesión para activar la nueva función PDF.');
+                    }
                     mostrarApp();
                     return;
                 }
@@ -847,6 +927,7 @@
         }
 
         function cerrarSesion() {
+            cerrarVistaPdf();
             clearTimeout(temporizadorInactividad);
             localStorage.removeItem(CLAVE_SESION);
             sesionActual = null;
@@ -1337,6 +1418,11 @@
                 fotoWrap.classList.add('hidden');
             }
 
+            pdfCotizacionActual = idCotizacion;
+            const visiblePdf = esAdminOSupervisorActual() || esVentasActual();
+            document.getElementById('detBtnPdfPrevia').classList.toggle('hidden', !visiblePdf);
+            document.getElementById('detBtnPdfExistente').classList.toggle('hidden', !visiblePdf || !cot.url_pdf_cotizacion);
+
             const btnEtapa = document.getElementById('detBtnRegistrarEtapa');
             const puedeRegistrarEtapa = (cot.estado === 'Programado' || cot.estado === 'En Ejecución');
             btnEtapa.classList.toggle('hidden', !puedeRegistrarEtapa);
@@ -1593,7 +1679,8 @@
                     <td class="p-3"><span class="${claseEstado} text-xs px-2 py-1 rounded-full font-medium">${etiquetaEstado(cot.estado)}</span></td>
                     <td class="p-3 whitespace-nowrap">
                         <button onclick="mostrarDetalleServicio('${cot.id_cotizacion}')" class="text-slate-600 hover:underline text-xs font-medium mr-2"><i class="fa-solid fa-eye mr-1"></i>Ver Detalles</button>
-                        <button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
+                        <button onclick="editarCotizacion('${cot.id_cotizacion}')" class="text-purple-600 hover:underline text-xs font-medium mr-2"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
+                        <button onclick="previsualizarPdfCotizacion('${cot.id_cotizacion}')" class="text-blue-700 hover:underline text-xs font-medium"><i class="fa-solid fa-file-pdf mr-1"></i>PDF</button>
                     </td>
                 </tr>`;
             });
@@ -1943,6 +2030,8 @@
                 closeModal('modal' + capitalize(tipo));
                 cargarDatos();
                 mostrarToast('Registro guardado con éxito', 'success');
+                if (resp.advertencia_pdf) mostrarToast(resp.advertencia_pdf, 'warning');
+                else if (resp.advertencia) mostrarToast(resp.advertencia, 'warning');
                 switchTab(tipo === 'cliente' ? 'clientes' : tipo === 'cotizacion' ? 'cotizaciones' : tipo === 'vehiculo' ? 'vehiculos' : 'facturacion');
                 event.target.reset();
                 quitarFoto();
@@ -1953,6 +2042,378 @@
                 btnTexto.textContent = tipo === 'facturacion' ? 'Guardar Factura' : ('Guardar ' + capitalize(tipo));
                 btnSpinner.classList.add('hidden');
             }
+        }
+
+
+
+        // ==========================================================
+        // PDF HTML INSTITUCIONAL: vista -> exportación -> Drive
+        // ==========================================================
+        // html2canvas y jsPDF corren en el navegador; GAS NO compone el documento.
+        let mejPdfDatos = null;
+        let mejPdfBlob = null;
+        let mejPdfEsExistente = false;
+        let mejPdfProcesando = false;
+        const MEJ_PDF_MAX_MB = 8;
+
+        function mejTextoSeguro(valor) {
+            return String(valor === null || valor === undefined ? '' : valor)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        function mejDato(valor, alternativo = 'Por confirmar') {
+            return mejTextoSeguro(String(valor === null || valor === undefined ? '' : valor).trim() || alternativo);
+        }
+        function mejMoneda(valor) {
+            const num = Number(String(valor || '0').replace(/\s/g, '').replace(/,/g, '.'));
+            return 'S/ ' + (Number.isFinite(num) ? num : 0).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+        function mejFechaLarga(valor) {
+            const d = new Date(String(valor || '') + 'T12:00:00');
+            return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-PE', {day:'numeric', month:'long', year:'numeric'});
+        }
+        function mejMostrarCarga(mensaje = '') {
+            const el = document.getElementById('pdfEstadoCarga');
+            el.textContent = mensaje;
+            el.classList.toggle('hidden', !mensaje);
+        }
+        function mejEstablecerProcesando(activo, mensaje = '') {
+            mejPdfProcesando = activo;
+            mejMostrarCarga(activo ? mensaje : '');
+            ['pdfBtnVer','pdfBtnDescargar','pdfBtnGenerar','pdfBtnVistaHtml'].forEach(id => {
+                const b = document.getElementById(id); if (b) b.disabled = activo;
+            });
+        }
+        function mejLogoInstitucional() {
+            const logo = document.querySelector('#loginOverlay img');
+            return logo && /^data:image\//.test(logo.src) ? logo.src : '';
+        }
+        function mejPie(numero) {
+            return `<footer class="mej-doc-footer"><span>RUC: 20606912324 · Líderes en el manejo y destrucción de residuos sólidos</span><span>${numero} / 3</span></footer>`;
+        }
+        function mejEncabezado(logo) {
+            return `<header class="mej-doc-header"><img class="mej-doc-logo" src="${logo}" alt="MEJ & Solutions Service S.A.C."><div class="mej-doc-kicker">MEJ &amp; SOLUTIONS<br>SERVICE S.A.C.</div></header>`;
+        }
+        function mejImagenOPlaceholder(url, leyenda, tipo) {
+            if (url && /^data:image\/(png|jpeg|webp);base64,/.test(url)) {
+                return `<div class="${tipo}"><img alt="${mejTextoSeguro(leyenda)}" src="${url}"></div>`;
+            }
+            return `<div class="${tipo}"><span>${mejTextoSeguro(leyenda)} no disponible</span></div>`;
+        }
+        // Diseñada a partir de las tres páginas de Plantilla_cotización.docx.
+        function renderizarDocumentoHtml(paquete) {
+            const c = paquete.cotizacion || {};
+            const v = paquete.vehiculo || {};
+            const cl = paquete.cliente || {};
+            const f = paquete.firmante || {};
+            const e = mejDato;
+            const logo = mejLogoInstitucional();
+            const nombre = e(cl.razon_social || c.cliente);
+            const recursos = String(c.conductor_asignado || '').split(',').map(x=>x.trim()).filter(Boolean);
+            const operadores = c.cantidad_recursos_operador || 'Por confirmar';
+            const auxiliares = c.cantidad_recursos_auxiliar || 'Por confirmar';
+            const numero = e(c.id_cotizacion);
+            const fecha = mejFechaLarga(paquete.fecha_emision);
+            const monto = mejMoneda(c.monto);
+            const ruta = [c.subtipo_destino, c.destino].map(x=>String(x||'').trim()).filter(Boolean).join(' · ');
+            const puntos = String(c.puntos_recojo || '').split(';').map(s=>s.trim()).filter(Boolean);
+            const descripcion = e(c.descripcion);
+            const tipo = e(c.tipo_servicio);
+            const residuo = e(c.tipo_material);
+            const imgCarga = mejImagenOPlaceholder(paquete.foto_carga, 'Fotografía referencial de la carga', 'mej-doc-foto-carga');
+            const imgVeh = mejImagenOPlaceholder(paquete.foto_vehiculo, 'Fotografía de unidad', 'mej-doc-foto-unidad');
+            const folio = paquete.tipo_visualizacion === 'oficial' ? '' : '<div class="mej-doc-borrador">BORRADOR</div>';
+
+            const pagina1 = `<section class="mej-doc-pagina" data-pagina="1">
+              ${mejEncabezado(logo)}${folio}
+              <main class="mej-doc-contenido">
+                <h1 class="mej-doc-titulo">COTIZACIÓN DE SERVICIO</h1>
+                <p class="mej-doc-parrafo"><strong>Nro. de cotización:</strong> ${numero}</p>
+                <p class="mej-doc-parrafo"><strong>Fecha de emisión:</strong> ${e(fecha,'--')}</p>
+                <h2 class="mej-doc-subtitulo">DATOS DEL CLIENTE</h2>
+                <div class="mej-doc-dato"><span class="mej-doc-dato-label">Razón social / Cliente</span><span class="mej-doc-dato-valor">${nombre}</span></div>
+                ${cl.ruc ? `<div class="mej-doc-dato"><span class="mej-doc-dato-label">RUC</span><span class="mej-doc-dato-valor">${e(cl.ruc)}</span></div>` : ''}
+                <div class="mej-doc-dato"><span class="mej-doc-dato-label">Ubicación</span><span class="mej-doc-dato-valor">${e(c.ubicacion)}</span></div>
+                <h2 class="mej-doc-subtitulo">DETALLE DEL SERVICIO</h2>
+                <div class="mej-doc-dato"><span class="mej-doc-dato-label">Alcance</span><span class="mej-doc-dato-valor">${tipo}</span></div>
+                <div class="mej-doc-dato"><span class="mej-doc-dato-label">Tipo de residuo</span><span class="mej-doc-dato-valor">${residuo}</span></div>
+                <div class="mej-doc-caja"><strong>Descripción referencial</strong><p style="margin:2mm 0 0;white-space:pre-wrap">${descripcion}</p></div>
+                ${ruta ? `<p class="mej-doc-parrafo"><strong>Ruta / destino:</strong> ${e(ruta)}</p>` : ''}
+                ${puntos.length ? `<p class="mej-doc-parrafo"><strong>Puntos de recojo:</strong> ${e(puntos.join(' → '))}</p>` : ''}
+                <p class="mej-doc-parrafo" style="margin-top:3mm"><strong>Imagen referencial:</strong></p>
+                ${imgCarga}
+                <h2 class="mej-doc-subtitulo">RECURSOS</h2>
+                <p class="mej-doc-parrafo">${e(operadores)} operador(es) de la unidad · ${e(auxiliares)} auxiliar(es) de carga</p>
+                <p class="mej-doc-parrafo"><strong>Unidad:</strong> ${e(c.vehiculo_asignado)} · <strong>Volumen:</strong> ${e(c.volumen_aprox || v.m3,'No especificado')} m³</p>
+                ${recursos.length ? `<p class="mej-doc-parrafo"><strong>Personal asignado:</strong> ${e(recursos.join(', '))}</p>` : ''}
+                <h2 class="mej-doc-subtitulo">EQUIPOS</h2>
+                <p class="mej-doc-parrafo">Uso de EPP: casco, lentes de seguridad, guantes de jebe y/o cuero y overol reflectivo.</p>
+              </main>${mejPie(1)}</section>`;
+
+            const pagina2 = `<section class="mej-doc-pagina" data-pagina="2">
+              ${mejEncabezado(logo)}${folio}
+              <main class="mej-doc-contenido">
+                <h1 class="mej-doc-titulo">UNIDAD Y PROPUESTA ECONÓMICA</h1>
+                <table class="mej-doc-tabla"><colgroup><col style="width:40%"><col style="width:60%"></colgroup>
+                  <thead><tr><th>Vehículo</th><th>Foto referencial</th></tr></thead>
+                  <tbody><tr><td><strong>${e(v.vehiculo || c.vehiculo_asignado)}</strong>
+                    <p style="margin:3mm 0 0">Placa: ${e(v.unidad || c.vehiculo_asignado)}</p>
+                    <p style="margin:2mm 0 0">Capacidad máxima:</p>
+                    <p style="margin:0">${e(v.m3,'--')} m³ / ${e(v.tn_carga,'--')} TN</p></td>
+                    <td style="padding:2mm">${imgVeh}</td></tr></tbody>
+                </table>
+                <p class="mej-doc-nota" style="text-align:right;margin-top:1mm">Imagen referencial</p>
+                <h2 class="mej-doc-subtitulo" style="margin-top:8mm">PROPUESTA ECONÓMICA</h2>
+                <table class="mej-doc-tabla"><colgroup><col style="width:8%"><col style="width:49%"><col style="width:11%"><col style="width:11%"><col style="width:21%"></colgroup>
+                  <thead><tr><th>Ítem</th><th>Descripción del servicio</th><th>Cant.</th><th>UM</th><th>Valor unitario</th></tr></thead>
+                  <tbody><tr><td>1</td><td>${tipo}<br>${residuo}</td><td>1</td><td>viaje</td><td class="mej-doc-resaltar">${e(monto)}</td></tr></tbody>
+                </table>
+                <p class="mej-doc-nota" style="text-align:right;margin-top:1mm">Los precios no incluyen IGV.</p>
+                <h2 class="mej-doc-subtitulo" style="margin-top:8mm">CONDICIONES DE SERVICIO</h2>
+                <ul class="mej-doc-lista">
+                  <li>Emisión de Orden de Compra a nombre de: <strong>MEJ &amp; SOLUTIONS SERVICE S.A.C. – RUC 20606912324.</strong></li>
+                  <li>Forma de pago: <strong>${e(c.tipo_pago)}</strong>.</li>
+                  <li>Los precios no incluyen IGV.</li>
+                  <li>Depósito a nuestra cuenta bancaria:</li>
+                </ul>
+                <table class="mej-doc-tabla mej-doc-tabla-banco"><colgroup><col style="width:23%"><col style="width:37%"><col style="width:40%"></colgroup>
+                 <thead><tr><th colspan="3">Titular: MEJ &amp; SOLUTIONS SERVICE S.A.C.</th></tr><tr><th>Banco</th><th>Cuenta corriente soles</th><th>Cuenta interbancaria soles</th></tr></thead>
+                 <tbody><tr><td>BBVA</td><td>0011-0933-0200786273</td><td>011-933-000200786273-99</td></tr></tbody>
+                </table>
+              </main>${mejPie(2)}</section>`;
+
+            const pagina3 = `<section class="mej-doc-pagina" data-pagina="3">
+              ${mejEncabezado(logo)}${folio}
+              <main class="mej-doc-contenido">
+                <h1 class="mej-doc-titulo">CONDICIONES GENERALES</h1>
+                <p class="mej-doc-parrafo">La presente cotización se encuentra sujeta a las siguientes condiciones comerciales y operativas:</p>
+                <ul class="mej-doc-lista" style="margin-top:8mm">
+                  <li>La presente cotización se basa en la información brindada por el cliente; si hubiese alguna diferencia al momento de realizar el servicio, se deberán recalcular los costos.</li>
+                  <li>El cliente debe proporcionar el acceso al punto de recojo de los residuos, que deben estar correctamente segregados.</li>
+                  <li>La disponibilidad de unidades está sujeta a coordinación previa con nuestro Departamento de Operaciones.</li>
+                  <li>Todo servicio debe ser programado con <strong>24 a 48 horas de anticipación</strong>.</li>
+                  <li>Las tarifas incluyen conductor capacitado, con SCTR y sus implementos para el manejo de residuos.</li>
+                  <li><strong>Validez de la oferta: 15 días calendario.</strong></li>
+                </ul>
+                <p class="mej-doc-parrafo" style="margin-top:18mm;text-align:center">Cualquier consulta, no dude en comunicarse con nosotros.</p>
+                <div class="mej-doc-firma">Atentamente,<br><br>
+                  <strong>${e(f.nombre)}</strong><br>
+                  ${e(f.puesto,'Área comercial')}<br>
+                  ${f.celular ? `Celular: ${e(f.celular)}<br>` : ''}
+                  ventas@mejsolutions.com.pe
+                </div>
+              </main>${mejPie(3)}</section>`;
+            document.getElementById('mejDocumentoVista').innerHTML = pagina1 + pagina2 + pagina3;
+        }
+
+        async function solicitarPdfCotizacion(idCot, accion, extras = {}) {
+            if (!sesionActual || !sesionActual.token) throw new Error('Vuelve a iniciar sesión para utilizar el PDF (requiere sesión nueva).');
+            const res = await fetch(WEB_APP_URL, {method:'POST', body:JSON.stringify({
+                tipo:'pdf_cotizacion', accion, id_cotizacion:idCot, token:sesionActual.token, ...extras
+            })});
+            const data = await res.json();
+            if (!res.ok || data.result !== 'success') throw new Error(data.message || 'No se pudo procesar el documento.');
+            return data;
+        }
+
+        function cerrarVistaPdf() {
+            if (mejPdfProcesando) return;
+            const m = document.getElementById('modalVistaPdf');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.getElementById('pdfFrame').src = 'about:blank';
+            if (urlBlobPdfActual) URL.revokeObjectURL(urlBlobPdfActual);
+            urlBlobPdfActual = null;
+            mejPdfDatos = null; mejPdfBlob = null; mejPdfEsExistente = false;
+            document.getElementById('mejDocumentoVista').innerHTML = '';
+        }
+
+        function mejAbrirModal() {
+            const m = document.getElementById('modalVistaPdf');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+
+        function mostrarVistaHtmlPdf() {
+            document.getElementById('pdfFrame').classList.add('hidden');
+            const cont = document.getElementById('pdfContenedorHtml');
+            cont.classList.remove('hidden', 'mej-pdf-oculto');
+        }
+
+        async function previsualizarPdfCotizacion(idCot = pdfCotizacionActual) {
+            if (!idCot || mejPdfProcesando) return;
+            // Solo cotizaciones guardadas; los cambios aún abiertos en el formulario no se reflejan.
+            cerrarVistaPdf();
+            pdfCotizacionActual = idCot;
+            ['pdfBtnVistaHtml','pdfBtnVer','pdfBtnDescargar'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+            mejAbrirModal();
+            document.getElementById('pdfTitulo').textContent = 'Borrador · ' + idCot;
+            document.getElementById('pdfAviso').textContent = 'Vista HTML del documento. No se ha guardado el PDF.';
+            document.getElementById('pdfBtnGenerar').classList.add('hidden');
+            mostrarVistaHtmlPdf();
+            mejEstablecerProcesando(true, 'Consultando cotización y fotografías desde Google Sheets / Drive...');
+            try {
+                const paquete = await solicitarPdfCotizacion(idCot, 'datos');
+                paquete.tipo_visualizacion = 'borrador';
+                mejPdfDatos = paquete;
+                renderizarDocumentoHtml(paquete);
+                const puedeEmitir = esAdminOSupervisorActual() && ['Programado','En Ejecución','Completado'].includes(paquete.cotizacion.estado);
+                document.getElementById('pdfBtnGenerar').classList.toggle('hidden', !puedeEmitir);
+                const advertencias = [...(paquete.advertencias || [])];
+                if (!paquete.vehiculo.unidad) advertencias.push('Sin vehículo asignado: confirma los recursos antes de emitir.');
+                if (!paquete.cotizacion.cantidad_recursos_operador || !paquete.cotizacion.cantidad_recursos_auxiliar) {
+                    advertencias.push('Cantidad de operadores/auxiliares no registrada: se presenta "Por confirmar" para no suponer cargos.');
+                }
+                const aviso = document.getElementById('pdfMensajeAdvertencia');
+                aviso.textContent = advertencias.join(' ');
+                aviso.classList.toggle('hidden', advertencias.length === 0);
+            } catch (err) {
+                mostrarToast('No se pudo previsualizar: ' + err.message, 'error');
+                if (!mejPdfDatos) cerrarVistaPdfForzado();
+            } finally {
+                mejEstablecerProcesando(false);
+            }
+        }
+
+        function cerrarVistaPdfForzado() {
+            mejPdfProcesando = false; cerrarVistaPdf();
+        }
+
+        async function generarPdfDesdeHtml() {
+            if (mejPdfBlob) return mejPdfBlob;
+            if (!mejPdfDatos) throw new Error('Primero abre una cotización en vista previa.');
+            if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+                throw new Error('No se cargaron html2canvas/jsPDF. Comprueba la conexión y las bibliotecas CDN.');
+            }
+            mostrarVistaHtmlPdf();
+            const paginas = [...document.querySelectorAll('#mejDocumentoVista .mej-doc-pagina')];
+            if (paginas.length !== 3) throw new Error('La plantilla institucional debe tener exactamente tres páginas.');
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            const imagenes = [...document.querySelectorAll('#mejDocumentoVista img')];
+            await Promise.all(imagenes.map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+                img.addEventListener('load',resolve,{once:true}); img.addEventListener('error',resolve,{once:true});
+            })));
+            const pdf = new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+            pdf.setProperties({title:'Cotización ' + mejPdfDatos.cotizacion.id_cotizacion,author:'MEJ & Solutions Service S.A.C.',subject:'Cotización comercial'});
+            for (let i = 0; i < paginas.length; i++) {
+                const pag = paginas[i];
+                if (pag.scrollHeight > pag.clientHeight + 4) {
+                    throw new Error('El contenido excede el A4 en la página ' + (i+1) + '. Ajusta la plantilla o acorta los textos antes de emitir.');
+                }
+                mejMostrarCarga(`Convirtiendo página ${i+1} de ${paginas.length} a PDF...`);
+                const canvas = await window.html2canvas(pag, {scale:1.6, useCORS:false, backgroundColor:'#ffffff', logging:false});
+                const jpg = canvas.toDataURL('image/jpeg',.87);
+                if (i > 0) pdf.addPage('a4','portrait');
+                pdf.addImage(jpg,'JPEG',0,0,210,297,undefined,'FAST');
+                canvas.width = 0; canvas.height = 0;
+            }
+            const blob = pdf.output('blob');
+            if (blob.size > MEJ_PDF_MAX_MB * 1024 * 1024) throw new Error('El PDF supera ' + MEJ_PDF_MAX_MB + ' MB. Reduce las fotos.');
+            mejPdfBlob = blob;
+            return blob;
+        }
+
+        function mejAbrirBlobEnFrame(blob) {
+            if (urlBlobPdfActual) URL.revokeObjectURL(urlBlobPdfActual);
+            urlBlobPdfActual = URL.createObjectURL(blob);
+            const marco = document.getElementById('pdfFrame');
+            marco.src = urlBlobPdfActual;
+            marco.classList.remove('hidden');
+            // Se mantiene fuente en DOM fuera de pantalla para que el PDF pueda regenerarse.
+            document.getElementById('pdfContenedorHtml').classList.add('mej-pdf-oculto');
+        }
+
+        async function mostrarPdfGenerado() {
+            if (mejPdfProcesando) return;
+            mejEstablecerProcesando(true, 'Preparando PDF en tu navegador...');
+            try {
+                const blob = await generarPdfDesdeHtml();
+                mejAbrirBlobEnFrame(blob);
+            } catch (err) { mostrarToast('Error al generar PDF: ' + err.message,'error'); }
+            finally { mejEstablecerProcesando(false); }
+        }
+
+        async function descargarCotizacionPdf() {
+            if (mejPdfProcesando) return;
+            mejEstablecerProcesando(true, 'Preparando descarga...');
+            try {
+                const blob = await generarPdfDesdeHtml();
+                const enlace = document.createElement('a');
+                const temporal = URL.createObjectURL(blob);
+                enlace.href = temporal;
+                enlace.download = (mejPdfEsExistente ? 'Cotizacion_' : 'BORRADOR_') + pdfCotizacionActual + '.pdf';
+                document.body.appendChild(enlace); enlace.click(); enlace.remove();
+                setTimeout(() => URL.revokeObjectURL(temporal), 1500);
+            } catch (err) { mostrarToast('No se pudo descargar: ' + err.message,'error'); }
+            finally { mejEstablecerProcesando(false); }
+        }
+
+        function mejBlobABase64(blob) {
+            return new Promise((resolve,reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+                reader.onerror = () => reject(new Error('Error al leer el PDF generado.'));
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        async function confirmarEmisionPdfDesdeVista() {
+            if (mejPdfProcesando || !mejPdfDatos || !esAdminOSupervisorActual()) return;
+            const id = mejPdfDatos.cotizacion.id_cotizacion;
+            const existe = Boolean(mejPdfDatos.cotizacion.url_pdf_cotizacion);
+            if (!window.confirm(existe
+               ? `Ya hay un PDF oficial para ${id}. ¿Deseas generar otro y actualizar el enlace? El anterior permanecerá en Drive.`
+               : `¿Confirmas la emisión oficial de ${id}? Se guardará en Drive y en url_pdf_cotizacion.`)) return;
+            mejEstablecerProcesando(true, 'Generando PDF definitivo...');
+            try {
+                // Sin marca de agua únicamente en la emisión oficial.
+                mejPdfDatos.tipo_visualizacion = 'oficial';
+                renderizarDocumentoHtml(mejPdfDatos);
+                mejPdfBlob = null;
+                const pdf = await generarPdfDesdeHtml();
+                mejMostrarCarga('Guardando PDF oficial en Google Drive...');
+                const base64 = await mejBlobABase64(pdf);
+                const resp = await solicitarPdfCotizacion(id, 'guardar', {
+                    pdf_base64:base64, firma_datos:mejPdfDatos.firma_datos, reemplazar:existe
+                });
+                mejPdfDatos.cotizacion.url_pdf_cotizacion = resp.url_pdf_cotizacion;
+                mejPdfEsExistente = true;
+                mejAbrirBlobEnFrame(pdf);
+                document.getElementById('pdfTitulo').textContent = 'PDF oficial · ' + id;
+                document.getElementById('pdfAviso').textContent = 'Emitido y registrado en Drive / Google Sheets.';
+                mostrarToast('PDF guardado y asociado a la cotización.','success');
+                cargarDatos();
+            } catch (err) {
+                // Evita que el usuario interprete el PDF local como emitido.
+                mejPdfDatos.tipo_visualizacion = 'borrador';
+                renderizarDocumentoHtml(mejPdfDatos);
+                mejPdfBlob = null;
+                mostrarVistaHtmlPdf();
+                mostrarToast('No se pudo emitir: ' + err.message, 'error');
+            } finally { mejEstablecerProcesando(false); }
+        }
+
+        async function abrirPdfExistenteCotizacion(idCot = pdfCotizacionActual) {
+            if (!idCot || mejPdfProcesando) return;
+            cerrarVistaPdf(); pdfCotizacionActual = idCot;
+            mejAbrirModal();
+            document.getElementById('pdfTitulo').textContent = 'PDF oficial · ' + idCot;
+            document.getElementById('pdfAviso').textContent = 'Archivo recuperado de Google Drive con acceso validado.';
+            document.getElementById('pdfBtnGenerar').classList.add('hidden');
+            document.getElementById('pdfBtnVistaHtml').classList.add('hidden');
+            document.getElementById('pdfBtnVer').classList.add('hidden');
+            mejEstablecerProcesando(true, 'Cargando PDF emitido desde Drive...');
+            try {
+                const resp = await solicitarPdfCotizacion(idCot,'obtener');
+                const binario = atob(resp.base64);
+                const bytes = new Uint8Array(binario.length);
+                for (let i=0;i<binario.length;i++) bytes[i]=binario.charCodeAt(i);
+                const blob = new Blob([bytes],{type:'application/pdf'});
+                mejPdfBlob = blob; mejPdfEsExistente = true;
+                mejAbrirBlobEnFrame(blob);
+            } catch (err) {
+                mostrarToast('No se pudo abrir PDF: '+err.message,'error');
+                cerrarVistaPdfForzado();
+            } finally { mejEstablecerProcesando(false); }
         }
 
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
